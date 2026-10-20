@@ -8,6 +8,7 @@
   var NAV = [
     { track: "user", title: "Anwender", pages: [
       ["index.html",          "",  "Start"],
+      ["installation.html",   "0", "Download & Installation"],
       ["erste-schritte.html", "1", "Erste Schritte"],
       ["projekt.html",        "2", "Projekt & config.json"],
       ["fahrzeug.html",       "3", "Fahrzeug & Komponenten"],
@@ -17,27 +18,6 @@
       ["steuergeraete.html",  "7", "Steuergeräte (SDK)"],
       ["python.html",         "8", "Python"],
       ["hilfe.html",          "9", "Fehlerbehebung"]
-    ]},
-    // Nur im Quellbaum, wird nicht installiert. Erscheint nur auf dev/-Seiten.
-    { track: "dev", title: "Entwickler", pages: [
-      ["dev/index.html",        "",   "Übersicht"],
-      ["dev/bauen.html",        "1",  "Bauen & Ausliefern"],
-      ["dev/architektur.html",  "2",  "Architektur"],
-      ["dev/module.html",       "3",  "Modulübersicht"],
-      ["dev/konventionen.html", "4",  "Konventionen"],
-      ["dev/env.html",          "5",  "Simulationskern env/"],
-      ["dev/modelle.html",      "6",  "Fahrzeugmodelle models/"],
-      ["dev/komponenten.html",  "7",  "Komponenten components/"],
-      ["dev/fabriken.html",     "8",  "Fabriken & Konfig-Pipeline"],
-      ["dev/strassen.html",     "9",  "Straßen roads/"],
-      ["dev/fahrer.html",       "10", "Fahrer driver/"],
-      ["dev/vecu.html",         "11", "Steuergeräte vECU/"],
-      ["dev/reports.html",      "12", "Reports & Inspektion"],
-      ["dev/cli.html",          "13", "CLI apps/cli/"],
-      ["dev/bindings.html",     "14", "Python-Bindings"],
-      ["dev/gui.html",          "15", "GUI apps/gui/"],
-      ["dev/erweitern.html",    "16", "Erweitern"],
-      ["dev/roadmap.html",      "17", "Baustellen & Roadmap"]
     ]}
   ];
 

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Download &amp; Installation · DriveLab</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="installation.html" data-root="" data-track="user">
+<div class="shell">
+<aside class="side" id="side"></aside>
+<main class="main"><div class="page">
+<header class="page-head">
+  <span class="k">Anwender · Installation</span>
+  <h1>Download &amp; Installation</h1>
+  <p class="lede">DriveLab herunterladen, installieren und für deine erste Simulation vorbereiten.</p>
+</header>
+<section class="chap" id="download">
+  <div class="chap-head"><h2>1. DriveLab herunterladen</h2></div>
+  <p>Die verfügbaren Versionen findest du im offiziellen GitHub-Repository:</p>
+  <div class="tiles">
+    <a class="tile" href="https://github.com/DriveLab-Sim/DriveLab_Release/releases" target="_blank" rel="noopener noreferrer"><span class="k">Offizieller Download</span><h4>GitHub Releases ↗</h4><p>Windows-Installer und Informationen zur aktuellen Version ansehen.</p></a>
+  </div>
+  <p>Öffne den gewünschten Release und lade im Bereich <strong>Assets</strong> den passenden Installer herunter, beispielsweise eine Datei mit dem Namen <code>DriveLab-*-win64.exe</code>.</p>
+  <div class="note warn"><span class="t">Alpha-Version</span>DriveLab befindet sich in einer frühen Entwicklungsphase. Funktionen und Dateiformate können sich zwischen Versionen ändern.</div>
+</section>
+<section class="chap" id="voraussetzungen">
+  <div class="chap-head"><h2>2. Systemanforderungen</h2></div>
+  <p>Aktuell wird ein Installer für <strong>Windows (64 Bit)</strong> angeboten. Weitere Plattformen sind damit nicht automatisch unterstützt. Zusätzliche Abhängigkeiten und Anforderungen richten sich nach dem jeweiligen Release.</p>
+</section>
+<section class="chap" id="installieren">
+  <div class="chap-head"><h2>3. Installieren</h2></div>
+  <p>Starte den heruntergeladenen Installer und folge den Schritten des Installationsassistenten. Die Standardinstallation erfolgt im Benutzerkontext und benötigt keine Administratorrechte.</p>
+  <div class="note warn"><span class="t">Hinweis zur Windows-Sicherheitsmeldung</span>Der Installer ist derzeit nicht digital signiert. Windows SmartScreen kann deshalb eine Warnung anzeigen. Prüfe vor dem Start, ob du die Datei aus dem offiziellen DriveLab-Repository bezogen hast. Führe keine Dateien aus unbekannten Quellen aus.</div>
+</section>
+<section class="chap" id="lizenz">
+  <div class="chap-head"><h2>4. Lizenz</h2></div>
+  <p>Für die Ausführung von Simulationen benötigst du eine gültige DriveLab-Lizenz (<code>license.lic</code>). Die Lizenz wird im Arbeitsordner abgelegt; alternativ kann der Pfad über <code>DRIVELAB_LICENSE</code> angegeben werden. Eine Lizenz ist nicht Bestandteil des öffentlichen Downloads.</p>
+  <p>Falls du noch keine Lizenz hast, kontaktiere den Projektbetreiber über das GitHub-Repository. Ein automatischer Lizenzbezug ist in dieser Dokumentation derzeit nicht beschrieben.</p>
+</section>
+<section class="chap" id="pruefen">
+  <div class="chap-head"><h2>5. Installation prüfen</h2></div>
+  <p>Öffne nach der Installation <strong>ein neues Terminal</strong> und führe aus:</p>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>drivelab --version
+drivelab license
+drivelab docs</pre></div>
+  <p>Mit <code>drivelab docs</code> kannst du weiterhin die lokal installierte Dokumentation öffnen – auch ohne Internetverbindung.</p>
+  <div class="tiles"><a class="tile" href="erste-schritte.html"><span class="k">Weiter</span><h4>Erste Schritte →</h4><p>Ein Projekt erstellen, simulieren und einen Report öffnen.</p></a></div>
+</section>
+</div></main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
