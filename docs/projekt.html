@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projekt & config.json · DriveLab</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="projekt.html" data-root="" data-track="user">
+<div class="shell">
+<aside class="side" id="side"></aside>
+<main class="main"><div class="page">
+
+<header class="page-head">
+  <span class="k">Anwender · 2</span>
+  <h1>Projekt & config.json</h1>
+  <p class="lede">Ein Projekt ist ein Ordner. Die <code>config.json</code> darin steckt Fahrzeug, Strecke, Fahrer und Sensoren zusammen.</p>
+</header>
+<section class="chap" id="aufbau">
+  <div class="chap-head"><h2>Aufbau eines Projekts</h2></div>
+<div class="tree">MeinProjekt/
+├── <b>config.json</b>              <i>Simulation: Dauer, Schrittweite, welche Dateien</i>
+├── data/
+│   ├── vehicle/zweispur.json  <i>das Fahrzeug und seine Komponenten</i>
+│   ├── tire/  motor/  brake/  aero/   <i>die Komponenten</i>
+│   ├── roads/                 <i>Strecken (.json, .xodr)</i>
+│   ├── driver/                <i>Fahrermodelle</i>
+│   ├── sensors/               <i>POV und IMU</i>
+│   └── vECU/EE1/              <i>Steuergeräte-Netz</i>
+│       ├── network.json         <i>wer mit wem, in welchem Takt</i>
+│       ├── EE1.dbc              <i>die CAN-Botschaften</i>
+│       └── bin/                 <i>die Steuergeräte als .dll</i>
+└── results/
+    └── run_001/               <i>ein Ordner je Lauf</i></div>
+  <p>Die Ordnernamen unter <code>data</code> sind Konvention, keine Pflicht: gefunden wird eine Datei über den
+  Pfad, der auf sie zeigt.</p>
+  <div class="note"><span class="t">Pfad-Regel</span>
+  Jeder Pfad in einer JSON-Datei ist relativ zu <em>dieser</em> Datei. Die Fahrzeugdatei
+  <span class="file">data/vehicle/zweispur.json</span> zeigt deshalb mit <code>../tire/MF.json</code> auf ihren Reifen,
+  die <span class="file">config.json</span> mit <code>./data/vehicle/zweispur.json</code> auf das Fahrzeug.
+  So lassen sich Ordner als Ganzes verschieben und kopieren.</div>
+</section>
+
+<section class="chap" id="config">
+  <div class="chap-head"><h2>Die config.json</h2></div>
+  <div class="code"><span class="lbl">JSON · Vorlage</span><pre>{
+  <span class="s">"sim"</span>:     { <span class="s">"t_end"</span>: <span class="n">200.0</span>, <span class="s">"dt"</span>: <span class="n">0.01</span>, <span class="s">"n_substeps"</span>: <span class="n">10</span>, <span class="s">"v0"</span>: <span class="n">0.0</span>, <span class="s">"results_dir"</span>: <span class="s">"results"</span> },
+  <span class="s">"vehicle"</span>: <span class="s">"./data/vehicle/zweispur.json"</span>,
+  <span class="s">"road"</span>:    <span class="s">"./data/roads/Testfeld.json"</span>,
+  <span class="s">"driver"</span>:  <span class="s">"./data/driver/scripted.json"</span>,
+  <span class="s">"sensors"</span>: <span class="s">"./data/sensors/SensorConfig.json"</span>,
+  <span class="s">"assessment"</span>: <span class="s">"./data/assessment/standard.json"</span>
+}</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Feld</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">sim.t_end</td><td>s</td><td>Simulationsdauer. Der Lauf endet auch vorher, wenn das Fahrzeug die Strecke verlässt oder die Route zu Ende ist.</td></tr>
+      <tr><td class="mono">sim.dt</td><td>s</td><td>Schrittweite nach außen: so oft fragt DriveLab den Fahrer, schreibt eine Zeile und rechnet ein <code>step()</code> in Python.</td></tr>
+      <tr><td class="mono">sim.n_substeps</td><td>–</td><td>Innere Schritte je <code>dt</code> für das Fahrzeugmodell (Vorgabe 1). <code>dt = 0.01</code> mit 10 ergibt 1 ms Rechenschritt.</td></tr>
+      <tr><td class="mono">sim.v0</td><td>m/s</td><td>Startgeschwindigkeit</td></tr>
+      <tr><td class="mono">sim.results_dir</td><td>Pfad</td><td>Wohin die Läufe geschrieben werden, Vorgabe <code>results</code> neben der <code>config.json</code></td></tr>
+      <tr><td class="mono">sim.run_name</td><td>–</td><td>Namensstamm der Laufordner, Vorgabe <code>run</code> → <code>run_001</code>, <code>run_002</code>, …</td></tr>
+      <tr><td class="mono">vehicle</td><td>Pfad</td><td>Fahrzeugdatei, <a href="fahrzeug.html">→ Fahrzeug &amp; Komponenten</a></td></tr>
+      <tr><td class="mono">road</td><td>Pfad</td><td>Strecke oder Straßennetz, <a href="umgebung.html#strecken">→ Strecken</a></td></tr>
+      <tr><td class="mono">driver</td><td>Pfad</td><td>Fahrermodell, <a href="umgebung.html#fahrer">→ Fahrer</a>. Beim Fahren aus Python ungenutzt.</td></tr>
+      <tr><td class="mono">sensors</td><td>Pfad</td><td><em>optional</em> – ohne läuft die Simulation ohne Sensoren, <a href="umgebung.html#sensoren">→ Sensoren</a></td></tr>
+      <tr><td class="mono">assessment</td><td>Pfad</td><td><em>optional</em> – Manöver für <code>drivelab assess</code>; ohne gilt der Standardsatz, <a href="ergebnisse.html#assess">→ Fahrzeugbewertung</a></td></tr>
+      <tr><td class="mono">route</td><td>Objekt</td><td><em>optional</em> – Route durch ein Straßennetz, <a href="umgebung.html#route">→ Route</a></td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><span class="t">Steuergeräte gehören ins Fahrzeug</span>
+  Das Steuergeräte-Netz hängt an der Fahrzeugdatei (<code>components.ecus</code>), nicht an der <code>config.json</code>.
+  Wer das Fahrzeug tauscht, tauscht seine Steuergeräte mit.</div>
+</section>
+
+<section class="chap" id="varianten">
+  <div class="chap-head"><h2>Varianten ausprobieren</h2></div>
+  <p>Eine Variante ist meist nur ein anderer Pfad in der <code>config.json</code>: eine andere Strecke
+  (<code>./data/roads/einfacher_Rundkurs.json</code>) oder der Bahnfolgeregler statt des Skripts
+  (<code>./data/driver/path.json</code>). Für mehrere Varianten nebeneinander: Projekt mit <code>drivelab new</code>
+  ein zweites Mal anlegen oder den Projektordner kopieren – die Pfade sind relativ und bleiben gültig.</p>
+  <p>Vor dem Rechnen lohnt <code>drivelab validate</code>: es baut Fahrzeug, Strecke, Steuergeräte-Netz und Sensoren
+  auf und nennt bei einem Fehler die Datei und den Grund.</p>
+</section>
+
+</div></main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

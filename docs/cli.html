@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kommandozeile · DriveLab</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="cli.html" data-root="" data-track="user">
+<div class="shell">
+<aside class="side" id="side"></aside>
+<main class="main"><div class="page">
+
+<header class="page-head">
+  <span class="k">Anwender · 5</span>
+  <h1>Kommandozeile</h1>
+  <p class="lede">Ein Programm, <code>drivelab</code>, mit wenigen Befehlen. <code>drivelab help</code> zeigt dieselbe Übersicht im Terminal.</p>
+</header>
+<section class="chap" id="projekt">
+  <div class="chap-head"><h2>Projekte</h2></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Befehl</th><th>Wirkung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">new &lt;name|pfad&gt;</td><td>Neues Projekt aus der Vorlage. Ein Name landet in <code>&lt;Arbeitsordner&gt;\projects</code>.</td></tr>
+      <tr><td class="mono">validate &lt;projekt&gt;</td><td>Baut Fahrzeug, Strecke, Steuergeräte-Netz und Sensoren auf, ohne zu rechnen. Nennt bei Fehlern Datei und Grund.</td></tr>
+      <tr><td class="mono">run &lt;projekt&gt;</td><td>Rechnet einen Lauf, schreibt <code>results\run_NNN</code>.</td></tr>
+      <tr><td class="mono">report &lt;projekt|lauf&gt;</td><td>Zusammenfassung im Terminal; mit dem Projekt ist der neueste Lauf gemeint.</td></tr>
+      <tr><td class="mono">&nbsp;&nbsp;--html · --open</td><td>HTML-Report schreiben bzw. schreiben und im Browser öffnen</td></tr>
+      <tr><td class="mono">assess &lt;projekt&gt;</td><td>Fährt Standardmanöver auf dem virtuellen Prüfgelände und schreibt einen mehrseitigen Report nach <code>assessments\assess_NNN</code>. <a href="ergebnisse.html#assess">→ Fahrzeugbewertung</a></td></tr>
+      <tr><td class="mono">&nbsp;&nbsp;--open</td><td>Report im Browser öffnen</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight"><code>&lt;projekt&gt;</code> ist ein Name aus dem Arbeitsordner, ein Pfad zum Projektordner, <code>.</code> für den aktuellen Ordner oder direkt eine <code>config.json</code>.</p>
+</section>
+
+<section class="chap" id="inspect">
+  <div class="chap-head"><h2>Komponenten prüfen</h2></div>
+  <div class="code"><span class="lbl">Aufbau</span><pre>drivelab inspect &lt;typ&gt; &lt;datei&gt; [--output &lt;ordner&gt;] [--open]</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>typ</th><th>Datei</th><th>Report zeigt</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">tire</td><td>Reifen</td><td>Seiten-, Längskraft, Rückstellmoment, kombinierter Schlupf</td></tr>
+      <tr><td class="mono">motor</td><td>Antrieb</td><td>Moment- und Leistungskennlinie</td></tr>
+      <tr><td class="mono">battery</td><td>HV-Akku</td><td>Kennwerte des Packs, Spannung und Leistungsgrenzen über dem Ladezustand</td></tr>
+      <tr><td class="mono">steering</td><td>Lenkung</td><td>Radlenkwinkel und Übersetzung über dem Lenkradwinkel</td></tr>
+      <tr><td class="mono">brake</td><td>Bremse</td><td>Radmomente über dem Pedal, Verteilung</td></tr>
+      <tr><td class="mono">aero</td><td>Aerodynamik</td><td>Widerstand und Auftrieb über der Geschwindigkeit</td></tr>
+      <tr><td class="mono">sds</td><td>Federung</td><td>Feder- und Dämpferkennlinien</td></tr>
+      <tr><td class="mono">kinematics</td><td>Kinematik</td><td>Sturz, Spur, Nachlauf über dem Federweg</td></tr>
+      <tr><td class="mono">vehicle</td><td>Fahrzeug</td><td>alle Komponenten des Fahrzeugs und das Steuergeräte-Netz in einem Report</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Ohne <code>--output</code> landet der Report in <code>results\inspect\&lt;typ&gt;\&lt;datei&gt;</code> unter dem aktuellen Ordner.</p>
+</section>
+
+<section class="chap" id="ecu">
+  <div class="chap-head"><h2>Steuergeräte</h2></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Befehl</th><th>Wirkung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">ecu new &lt;name&gt;</td><td>Steuergeräte-Projekt aus dem SDK in <code>&lt;Arbeitsordner&gt;\ecus\&lt;name&gt;</code></td></tr>
+      <tr><td class="mono">&nbsp;&nbsp;--dir &lt;ordner&gt;</td><td>stattdessen in diesem Ordner anlegen</td></tr>
+      <tr><td class="mono">&nbsp;&nbsp;--sdk &lt;ordner&gt;</td><td>anderes SDK verwenden</td></tr>
+      <tr><td class="mono">ecu check &lt;bibliothek&gt;</td><td>Was steckt in der DLL: Einsprung, ABI-Version, Steuergeräte und ihre Signale</td></tr>
+      <tr><td class="mono">ecu list &lt;projekt&gt;</td><td>Das Netz eines Projekts: Teilnehmer mit Takt und Versatz, wer welches Signal sendet und liest, die Botschaften. Laufzeiten der Wirkketten zeigt <code>inspect vehicle</code>.</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Wie man ein Steuergerät schreibt: <a href="steuergeraete.html">→ Steuergeräte</a>.</p>
+</section>
+
+<section class="chap" id="sonst">
+  <div class="chap-head"><h2>Sonstiges</h2></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Befehl</th><th>Wirkung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">docs [thema]</td><td>dieses Handbuch im Browser öffnen, z. B. <code>drivelab docs ecu</code>. Themen: <code>start, erste-schritte, projekt, fahrzeug, umgebung, cli, ergebnisse, steuergeraete, python, hilfe</code> und Kurzformen wie <code>ecu</code>, <code>reifen</code>, <code>report</code></td></tr>
+      <tr><td class="mono">version</td><td>Version, Installationsordner, Arbeitsordner</td></tr>
+      <tr><td class="mono">license</td><td>Lizenzstatus und gelesene Datei</td></tr>
+      <tr><td class="mono">help</td><td>Befehlsübersicht</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Ohne gültige Lizenz laufen nur diese vier.</p>
+</section>
+
+</div></main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

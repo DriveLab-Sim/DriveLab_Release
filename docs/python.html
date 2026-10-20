@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python · DriveLab</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="python.html" data-root="" data-track="user">
+<div class="shell">
+<aside class="side" id="side"></aside>
+<main class="main"><div class="page">
+
+<header class="page-head">
+  <span class="k">Anwender · 8</span>
+  <h1>Python</h1>
+  <p class="lede">Das Modul <code>drivelab</code> steuert eine Simulation Schritt für Schritt aus Python: Befehl rein, Zustand, Sensoren und Straßenbezug raus. Dazu kommt eine Straßen-API zum Laden, Abfragen und Abtasten von Strecken.</p>
+</header>
+<section class="chap" id="beispiele">
+  <div class="chap-head"><h2>Beispiele</h2></div>
+  <p>Im Arbeitsordner unter <span class="file">Dokumente/DriveLab/examples/python</span>. Der Installer legt sie dort an; eigene Änderungen überschreibt ein Update nicht.
+  <span class="file">drivelab_path.py</span> verweist auf die Installation und wird bei jedem Update neu geschrieben.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Datei</th><th>Inhalt</th><th>braucht</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">manual_control.py</td><td>Minimalbeispiel: fahren, lenken, bremsen</td><td>–</td></tr>
+      <tr><td class="mono">pov_sensor.py</td><td>POV-Sensor live, Signale aus allen Quellen, CSV-Export; eigener Bahnfolgeregler</td><td class="mono">matplotlib</td></tr>
+      <tr><td class="mono">plot_can.py</td><td>Signale aus dem Bus-Mitschnitt <code>can.tsv</code> plotten</td><td class="mono">pandas · matplotlib</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>cd %USERPROFILE%\Documents\DriveLab\examples\python
+python pov_sensor.py ..\..\projects\MeinProjekt\config.json
+python plot_can.py ..\..\projects\MeinProjekt\results\run_001\can.tsv</pre></div>
+  <p>Die Beispiele nehmen die <code>config.json</code> eines Projekts – Fahrzeug, Strecke und Sensoren kommen von dort. Ohne Angabe nutzen sie die Vorlage aus
+  dem Installationsordner, dann ohne Ergebnisordner. Die Vorlage fährt geradeaus; Kurven zeigt
+  <code>"road": "./data/roads/einfacher_Rundkurs.json"</code> in der <code>config.json</code>.</p>
+</section>
+
+<section class="chap" id="einrichtung">
+  <div class="chap-head"><h2>Einrichtung</h2></div>
+  <p>Das Modul liegt in <span class="file">python</span> im Installationsordner und ist für <strong>eine bestimmte Python-Version</strong> gebaut; sie steht im Dateinamen,
+  z. B. <code>drivelab.cp313-win_amd64.pyd</code> = Python 3.13. Mit einer anderen Version schlägt <code>import drivelab</code> fehl.</p>
+  <div class="code"><span class="lbl">Python</span><pre>import os, sys
+from pathlib import Path
+
+ROOT = Path(os.environ[&quot;LOCALAPPDATA&quot;]) / &quot;Programs&quot; / &quot;DriveLab&quot;   # Installationsordner
+sys.path.insert(0, str(ROOT / &quot;python&quot;))
+os.add_dll_directory(str(ROOT / &quot;python&quot;))      # DLLs neben dem Modul
+
+import drivelab</pre></div>
+  <p><code>make_env</code> braucht eine gültige Lizenz, wie die Kommandozeile.</p>
+</section>
+
+<section class="chap" id="simulation">
+  <div class="chap-head"><h2>Simulation</h2></div>
+  <div class="code"><span class="lbl">Python</span><pre>config = Path.home() / &quot;Documents&quot; / &quot;DriveLab&quot; / &quot;projects&quot; / &quot;MeinProjekt&quot; / &quot;config.json&quot;
+env = drivelab.make_env(str(config))
+
+obs = env.reset()
+while True:
+    result = env.step(drivelab.Action(0.0, 0.3, 0.0))   # Lenkwinkel, Gas, Bremse
+    if result.done:
+        break</pre></div>
+  <p><code>make_env</code> legt wie <code>drivelab run</code> einen Ergebnisordner an. Mit
+  <code>make_env(config, artifacts=drivelab.RunArtifacts.Disabled)</code> entsteht keiner – für Experimente und für Konfigurationen in schreibgeschützten Ordnern.
+  Ein <code>step</code> rechnet einen Schritt <code>sim.dt</code>. Die Fahrerdatei der Konfiguration bleibt ungenutzt – der Fahrer ist dein Python-Code.</p>
+
+  <h3 class="sub">VehicleEnv</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Methode</th><th>Ergebnis</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">reset()</td><td><code>RoadObservation</code>; Zeit auf 0, Anfangszustand</td></tr>
+      <tr><td class="mono">step(action)</td><td><code>StepResult</code>; der Befehl läuft über die Steuergeräte, falls das Fahrzeug welche hat</td></tr>
+      <tr><td class="mono">step_direct(inputs)</td><td><code>StepResult</code>; <code>PlantInputs</code> direkt ans Fahrzeug, an den Steuergeräten vorbei</td></tr>
+      <tr><td class="mono">time()</td><td>Simulationszeit [s]</td></tr>
+      <tr><td class="mono">state_names() · current_state()</td><td>Zustandsvektor des Fahrzeugmodells: Namen und Werte</td></tr>
+      <tr><td class="mono">output_names() · outputs()</td><td>Ausgänge des Fahrzeugmodells: Namen und Werte</td></tr>
+      <tr><td class="mono">sensors()</td><td>aktueller <code>SensorFrame</code></td></tr>
+      <tr><td class="mono">has_plant_control()</td><td><code>True</code>, wenn das Fahrzeug ein Steuergeräte-Netz hat</td></tr>
+      <tr><td class="mono">plant_inputs()</td><td><code>PlantInputs</code>, die im letzten Schritt am Fahrzeug ankamen</td></tr>
+      <tr><td class="mono">set_logging(on)</td><td>Zeilen in <code>states.tsv</code> usw. an/aus (nur mit Ergebnisordner)</td></tr>
+    </tbody>
+  </table></div>
+  <p>Zustände und Ausgänge hängen vom Fahrzeugmodell ab – am robustesten per Namen:</p>
+  <div class="code"><span class="lbl">Python</span><pre>state = dict(zip(env.state_names(), env.current_state()))
+vx = state[&quot;v_x_body&quot;]            # Zweispur/MKS; Einspur: &quot;xdot&quot;</pre></div>
+
+  <h3 class="sub">Befehle und Ergebnis</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Typ</th><th>Felder</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">Action(lenkwinkel, gas, bremse)</td><td>Lenkradwinkel [rad], + = links (ohne Lenksystem = Radlenkwinkel); Gas und Bremse 0…1</td></tr>
+      <tr><td class="mono">PlantInputs(steer, throttle, brake)</td><td>wie <code>Action</code>, aber das, was am Fahrzeug ankommt</td></tr>
+      <tr><td class="mono">StepResult</td><td><code>obs</code> (<code>RoadObservation</code>) · <code>sensors</code> (<code>SensorFrame</code>) · <code>done</code> (Strecke verlassen, Routenende oder <code>t_end</code>) · <code>reward</code> (derzeit 0)</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 class="sub">RoadObservation – Fahrzeug relativ zur Straße</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Feld</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">s</td><td>m</td><td>Position entlang der Straße</td></tr>
+      <tr><td class="mono">e_y</td><td>m</td><td>Querabweichung von der Mitte, + = links</td></tr>
+      <tr><td class="mono">e_psi</td><td>rad</td><td>Kurswinkelfehler, + = Fahrzeug zeigt nach links</td></tr>
+      <tr><td class="mono">curvature</td><td>1/m</td><td>Krümmung an der Position, + = Linkskurve</td></tr>
+      <tr><td class="mono">laneWidth</td><td>m</td><td>Fahrbahnbreite</td></tr>
+      <tr><td class="mono">distLeft · distRight</td><td>m</td><td>Abstand zum linken/rechten Rand</td></tr>
+      <tr><td class="mono">offRoad</td><td>–</td><td>Fahrzeug außerhalb der Fahrbahn</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3 class="sub">Sensoren – SensorFrame</h3>
+  <p>Jeder Sensor misst in seinem eigenen Takt; dazwischen bleibt die letzte Messung stehen, <code>timestamp</code> zeigt, wann sie entstand.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Sensor</th><th>Felder</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">pov</td><td><code>valid</code>, <code>timestamp</code>, <code>route</code>: Punkte voraus im Sensorsystem (x vorn, y links). Je Punkt <code>s_relative</code>, <code>x</code>, <code>y</code>, <code>left_x/y</code>, <code>right_x/y</code>, <code>heading</code>, <code>curvature</code>, <code>lane_width</code>.</td></tr>
+      <tr><td class="mono">imu</td><td><code>valid</code>, <code>timestamp</code>, <code>acceleration</code> und <code>angular_velocity</code> mit <code>x, y, z</code> im Sensorsystem; Beschleunigung ohne Erdbeschleunigung</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="chap" id="strassen">
+  <div class="chap-head"><h2>Straßen</h2></div>
+  <div class="code"><span class="lbl">Python</span><pre>net = drivelab.load_road_network(&quot;strecke.xodr&quot;)        # oder DriveLab-JSON
+road = net.road(net.ids()[0])
+print(road.length())
+
+geo = drivelab.sample_road(road, ds=1.0)                # für Plots
+plt.plot(geo.left_x, geo.left_y, geo.right_x, geo.right_y)</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Funktion</th><th>Zweck</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">load_road_network(path)</td><td>Netz aus <code>.xodr</code> oder DriveLab-JSON laden</td></tr>
+      <tr><td class="mono">sample_road(road, ds)</td><td>Straße abtasten → <code>RoadGeometry</code> mit Listen <code>s</code>, <code>center_x/y</code>, <code>left_x/y</code>, <code>right_x/y</code></td></tr>
+      <tr><td class="mono">build_route(net, start_road_id, …)</td><td>Route ab einer Straße entlang der Verknüpfungen</td></tr>
+      <tr><td class="mono">build_route_from_ids(net, road_ids, …)</td><td>Route aus einer Liste von Straßen, Kreuzungen werden ergänzt</td></tr>
+      <tr><td class="mono">find_route(net, from_road, to_road, via=[], …)</td><td>Route automatisch suchen</td></tr>
+      <tr><td class="mono">diagnose_route(net, from_road, to_road, …)</td><td>Textzeilen: wo die Spurführung abreißt</td></tr>
+      <tr><td class="mono">sample_route(net, route, ds)</td><td>Route abtasten</td></tr>
+      <tr><td class="mono">convert_road_network(in_path, out_path)</td><td><code>.xodr</code> nach DriveLab-JSON umwandeln</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight"><code>RoadNetwork</code>: <code>ids()</code>, <code>road(id)</code>, <code>contains(id)</code>, <code>junction_ids()</code>, <code>junction_info(id)</code>, <code>connecting_road_ids(junction_id)</code>.
+  <code>Road</code>: <code>length()</code>, <code>evaluate(s)</code>, <code>reference_pose(s)</code>, <code>to_xy(s, t)</code>, Spurabfragen.
+  <code>Route</code>: <code>length()</code>, <code>road_ids()</code>, <code>lane_ids()</code>, <code>sample(net, s)</code>, <code>audit(net)</code>.
+  Optionale Parameter zeigt <code>help(drivelab.find_route)</code>.</p>
+</section>
+
+<section class="chap" id="fallen">
+  <div class="chap-head"><h2>Stolperfallen</h2></div>
+  <ul class="list">
+    <li><strong><code>env.sensors()</code> gilt bis zum nächsten <code>step</code>.</strong> Was du behalten willst, in eigene Variablen kopieren (wie <code>read_signals</code> in <span class="file">pov_sensor.py</span>).</li>
+    <li><strong><code>step</code> oder <code>step_direct</code>:</strong> Mit Steuergeräte-Netz kommt ein Befehl aus <code>step</code> verzögert und begrenzt an. <code>plant_inputs()</code> zeigt, was tatsächlich ankam.</li>
+    <li><strong>Fahrzeugmodell wechseln</strong> ändert die Namen in <code>state_names()</code>. Per Namen zugreifen, nicht per Index.</li>
+  </ul>
+</section>
+
+</div></main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

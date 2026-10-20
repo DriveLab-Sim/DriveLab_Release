@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fahrzeug & Komponenten · DriveLab</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="fahrzeug.html" data-root="" data-track="user">
+<div class="shell">
+<aside class="side" id="side"></aside>
+<main class="main"><div class="page">
+
+<header class="page-head">
+  <span class="k">Anwender · 3</span>
+  <h1>Fahrzeug & Komponenten</h1>
+  <p class="lede">Die Fahrzeugdatei wählt das Modell und verweist auf eine Datei je Komponente. Jede Komponente hat ein Feld <code>type</code>, das das Modell dahinter auswählt.</p>
+</header>
+<section class="chap" id="fahrzeug">
+  <div class="chap-head"><h2>Die Fahrzeugdatei</h2></div>
+  <div class="code"><span class="lbl">JSON · data/vehicle/zweispur.json (gekürzt)</span><pre>{
+  <span class="s">"simulation_approach"</span>: <span class="s">"Zweispurmodell"</span>,
+  <span class="s">"components"</span>: {
+    <span class="s">"tires"</span>:  [<span class="s">"../tire/MF.json"</span>, <span class="s">"../tire/MF.json"</span>, <span class="s">"../tire/MF.json"</span>, <span class="s">"../tire/MF.json"</span>],
+    <span class="s">"motors"</span>: [<span class="s">"../motor/EMotor.json"</span>, …],
+    <span class="s">"brake"</span>:  <span class="s">"../brake/simpleBrake.json"</span>,
+    <span class="s">"aero"</span>:   <span class="s">"../aero/simpleAero.json"</span>,
+    <span class="s">"ecus"</span>:   <span class="s">"../vECU/EE1/network.json"</span>
+  },
+  <span class="s">"vehicle"</span>:  { <span class="s">"m_v"</span>: <span class="n">1500</span>, <span class="s">"l_v"</span>: <span class="n">1.3</span>, <span class="s">"l_h"</span>: <span class="n">1.4</span>, … },
+  <span class="s">"getriebe"</span>: <span class="n">13.0</span>
+}</pre></div>
+  <p><code>simulation_approach</code> wählt das Modell und damit, welche Komponenten und Parameter erwartet werden:</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>simulation_approach</th><th>Reifen / Motoren</th><th>zusätzlich</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">"Einspurmodell"</td><td>je 2 (VA, HA)</td><td>–</td></tr>
+      <tr><td class="mono">"Zweispurmodell"</td><td>je 4 (VL, VR, HL, HR)</td><td>–</td></tr>
+      <tr><td class="mono">"MKS"</td><td>je 4</td><td class="mono">kinematics{front,rear} · sds{front,rear}</td></tr>
+    </tbody>
+  </table></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>components</th><th>Pflicht</th><th>Inhalt</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">tires · motors</td><td>ja</td><td>Liste, Länge passend zum Modell</td></tr>
+      <tr><td class="mono">brake</td><td>ja</td><td>eine Bremsdatei für das ganze Fahrzeug</td></tr>
+      <tr><td class="mono">aero</td><td>ja*</td><td>Aerodynamik; *alternativ <code>cwA</code> und <code>clA</code> im <code>vehicle</code>-Block</td></tr>
+      <tr><td class="mono">battery</td><td>nein</td><td>HV-Akku, <a href="#akku">→ HV-Akku</a>. Ohne ist die Leistung nur durch die Motoren begrenzt.</td></tr>
+      <tr><td class="mono">steering</td><td>nein</td><td>Lenksystem, <a href="#lenkung">→ Lenkung</a>. Ohne ist <code>steer</code> direkt der Radlenkwinkel (Übersetzung 1).</td></tr>
+      <tr><td class="mono">kinematics · sds</td><td>nur MKS</td><td>je <code>front</code> und <code>rear</code></td></tr>
+      <tr><td class="mono">ecus</td><td>nein</td><td>Steuergeräte-Netz, <a href="steuergeraete.html">→ Steuergeräte</a>. Ohne gehen die Fahrerbefehle direkt ans Fahrzeug.</td></tr>
+    </tbody>
+  </table></div>
+
+  <details class="fold"><summary>Fahrzeugparameter – alle drei Modelle</summary><div class="fold-body">
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Parameter</th><th>Einheit</th><th>Einspur</th><th>Zweispur</th><th>MKS</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">m / m_v</td><td>kg</td><td>m</td><td>m_v</td><td>m_v</td><td>Gesamtmasse <em>inklusive</em> Räder</td></tr>
+      <tr><td class="mono">l_v · l_h</td><td>m</td><td>●</td><td>●</td><td>●</td><td>Schwerpunktabstand zur Vorder-/Hinterachse</td></tr>
+      <tr><td class="mono">sw_v · sw_h</td><td>m</td><td>–</td><td>●</td><td>●</td><td>Spurweite vorn/hinten</td></tr>
+      <tr><td class="mono">h_cg</td><td>m</td><td>●*</td><td>●</td><td>●</td><td>Schwerpunkthöhe; *Einspur: für die Längs-Lastverlagerung, fehlt sie, gilt 0,5 m mit Warnung</td></tr>
+      <tr><td class="mono">theta_xx · theta_yy · theta_zz</td><td>kg·m²</td><td>nur zz</td><td>●</td><td>●</td><td>Trägheiten um Wank-, Nick-, Gierachse</td></tr>
+      <tr><td class="mono">theta_v · theta_h</td><td>kg·m²</td><td>●</td><td>●</td><td>●</td><td>Raddrehträgheit je Rad</td></tr>
+      <tr><td class="mono">m_R_v · m_R_h</td><td>kg</td><td>–</td><td>●</td><td>●</td><td>ungefederte Masse je Rad – Teil von <code>m_v</code>, nicht zusätzlich</td></tr>
+      <tr><td class="mono">c_A_v · c_A_h · d_A_v · d_A_h</td><td>N/m · Ns/m</td><td>–</td><td>●</td><td>–</td><td>Aufbaufeder/-dämpfer je Rad (im MKS aus den SDS-Dateien)</td></tr>
+      <tr><td class="mono">c_R_v · c_R_h</td><td>N/m</td><td>–</td><td>●</td><td>●</td><td>Reifen-Vertikalsteifigkeit</td></tr>
+      <tr><td class="mono">rack_per_steer</td><td>m/rad</td><td>–</td><td>–</td><td>optional</td><td>Zahnstangenweg je Lenkwinkel; 0 = Lenkwinkel direkt am Rad</td></tr>
+      <tr><td class="mono">getriebe</td><td>–</td><td>●</td><td>●</td><td>●</td><td>Übersetzung Motor → Rad (neben <code>vehicle</code>, nicht darin)</td></tr>
+    </tbody>
+  </table></div>
+  </div></details>
+
+  <div class="note"><span class="t">Prüfen ohne Lauf</span>
+  <code>drivelab inspect vehicle data/vehicle/zweispur.json --open</code> erzeugt einen Report über alle Komponenten
+  des Fahrzeugs samt Steuergeräte-Netz. Jede Komponente geht auch einzeln, siehe unten.</div>
+</section>
+
+<section class="chap" id="reifen">
+  <div class="chap-head"><h2>Reifen</h2></div>
+  <p>Alle Reifenmodelle liefern Kräfte mit Einlaufverhalten: die Kraft baut sich über den Rollweg auf, nicht sprunghaft.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>type</th><th>Modell</th><th>Parameter</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">"MFv0.1"</td><td>vereinfachte Magic Formula mit kombiniertem Schlupf, Sturz und Rückstellmoment; die Datei beschreibt einen linken Reifen, rechts wird gespiegelt</td><td>Gruppen <code>Geom · Long · Lat · Slip · Align · Relax</code></td></tr>
+      <tr><td class="mono">.tir-Datei</td><td>Magic Formula 5.2 (Kern) aus einer Parameterdatei: ADAMS-.tir (MF 5.2/6.1) oder CarMaker-InfoFile (<code>Long.PCX1 = …</code>). Kein <code>type</code> nötig, erkannt an der Endung <code>.tir</code>. Vorzeichen (TYDEX/ISO) werden beim Laden physikalisch geprüft und angepasst; <code>TYRESIDE</code> bestimmt die Spiegelung auf der Gegenseite. Rückstellmoment Mz nach MF 5.2 (Reifennachlauf, Restmoment, kombinierter Schlupf mit Hebelarm s·Fx). Druck- und 6.1-Sturzterme noch nicht ausgewertet</td><td class="mono">FNOMIN · UNLOADED_RADIUS · PCX1 … (Pflicht: FNOMIN, PCX1, PDX1, PKX1, PCY1, PDY1, PKY1, PKY2)</td></tr>
+      <tr><td class="mono">"Linear"</td><td>lineare Schlupfsteifigkeiten, keine Sättigung – für Grundsatzuntersuchungen. Alter Name: <code>"nonlinear"</code></td><td class="mono">cs_stat · ca_stat · cx_stat · cy_stat · R0</td></tr>
+    </tbody>
+  </table></div>
+  <details class="fold"><summary>Magic-Formula-Parameter ("MFv0.1")</summary><div class="fold-body">
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Gruppe</th><th>Schlüssel</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">Geom</td><td class="mono">R0 · Fz0</td><td>Radius [m] · Nennradlast [N]</td></tr>
+      <tr><td class="mono">Long</td><td class="mono">pCx1 · pDx1 · pDx2 · pEx1 · pEx2 · pKx1 · pKx2</td><td>reine Längskraft: Form, Maximum, Krümmung, Steifigkeit</td></tr>
+      <tr><td class="mono">Lat</td><td class="mono">pCy1 · pDy1 · pDy2 · pEy1 · pEy2 · pKy1 · pKy2 · pKy3</td><td>reine Seitenkraft, <code>pKy3</code> = Sturzeinfluss</td></tr>
+      <tr><td class="mono">Slip</td><td class="mono">rBx · rCx · rBy · rCy</td><td>Abschwächung bei kombiniertem Schlupf</td></tr>
+      <tr><td class="mono">Align</td><td class="mono">qDt1 · qBt1 · qCt1 · qEt1 · qDr1 · qBr1 · sArm</td><td>Rückstellmoment (pneumatischer + mechanischer Nachlauf)</td></tr>
+      <tr><td class="mono">Relax</td><td class="mono">cx_stat · cy_stat · sigma_min · sigma_max · v_low</td><td>Einlaufverhalten: Steifigkeiten [N/m], Einlauflängen [m], Übergang bei kleiner Geschwindigkeit [m/s]</td></tr>
+    </tbody>
+  </table></div>
+  </div></details>
+  <div class="code"><span class="lbl">Report</span><pre>drivelab inspect tire data/tire/MF.json --open</pre></div>
+  <p class="tight">Zeigt Seiten- und Längskraft über Schlupf bei mehreren Radlasten, die Reibungsellipse und das Rückstellmoment.</p>
+</section>
+
+<section class="chap" id="antrieb">
+  <div class="chap-head"><h2>Antrieb</h2></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>type</th><th>Parameter</th><th>Verhalten</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">"SimpleMotor"</td><td class="mono">M_max [Nm]</td><td>Moment = Gas · M_max, unabhängig von der Drehzahl</td></tr>
+      <tr><td class="mono">"EMotor"</td><td class="mono">M_Max [Nm] · n_max [rad/s] · V [V] · Arms [A] · gamma · efficiency</td><td>E-Maschine: konstantes Moment bis zur Eckdrehzahl, darüber Leistungsgrenze aus V·I; <code>gamma</code> formt die Pedalkennlinie (Vorgabe 1).
+      <code>efficiency</code>: Wirkungsgrad Inverter + Motor, konstant (Vorgabe 1). Mit HV-Akku gilt statt <code>V</code> die aktuelle Akkuspannung</td></tr>
+      <tr><td class="mono">"PmsmDrive"</td><td class="mono">pole_pairs · ke_v_per_krpm · r_terminal_ohm · inductance_mh · i_max_arms · torque_current · n_max_rpm · voltage_dc · inertia_kgcm2 · field_weakening · voltage_utilization · inverter_efficiency · gamma</td><td>Synchronmaschine mit Umrichter (dq-Modell): Moment aus der Strom-Moment-Kennlinie, begrenzt durch <code>i_max_arms</code> und die Spannung U<sub>dc</sub>/√3. Die Eckdrehzahl wandert mit der Akkuspannung.
+      <code>field_weakening</code>: oberhalb der Eckdrehzahl konstante Leistung, sonst Abfall bis zur Leerlaufdrehzahl. Rekuperationsgrenze, Ströme <code>i_q</code>/<code>i_d</code> und Kupferverluste werden mitgerechnet. <code>voltage_dc</code> gilt nur ohne Akku.
+      Die Rotorträgheit geht mit <code>getriebe</code>² in die Radträgheit ein. Beispiel: <code>data/motor/AMK_DD5.json</code></td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Optional in der Motordatei: <code>"inspect": {"voltages_dc": [500, 600]}</code> zeichnet die Kennlinien je Spannung, <code>"reference"</code> legt Punkte (z.&nbsp;B. aus dem Datenblatt oder vom Prüfstand) darüber und vergleicht sie mit dem Modell.</p>
+  <p class="tight">Das Moment wirkt über <code>getriebe</code> am Rad. Eingang ist die Gaspedalstellung 0…1 – vom Fahrer oder, mit Steuergeräte-Netz, vom Steuergerät.</p>
+  <div class="code"><span class="lbl">Report</span><pre>drivelab inspect motor data/motor/EMotor.json --open</pre></div>
+</section>
+
+<section class="chap" id="akku">
+  <div class="chap-head"><h2>HV-Akku</h2></div>
+  <p>Optional unter <code>components.battery</code>. Ohne Akku ist die Motorleistung nur durch die Motoren begrenzt, wie bisher.
+  Mit Akku gilt: Die Motoren bekommen die aktuelle Klemmenspannung, und brauchen sie zusammen mehr, als der Akku liefern kann,
+  werden alle Antriebsmomente gleich skaliert (<code>drive_limit</code> = 4). Der Ladezustand ergibt sich aus dem Strom.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>type</th><th>Stufe</th><th>Verhalten</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">"CellPack"</td><td>low</td><td>Zellen <code>series</code> × <code>parallel</code>; je Zelle Ruhespannung OCV(SoC) und Innenwiderstand. Klemmenspannung = OCV − R·I, keine Temperatur, keine Dynamik</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><span class="lbl">JSON · data/battery/pack_122s6p.json (Beispielzelle)</span><pre>{ <span class="s">"type"</span>: <span class="s">"CellPack"</span>,
+  <span class="s">"params"</span>: {
+    <span class="s">"series"</span>: <span class="n">122</span>, <span class="s">"parallel"</span>: <span class="n">6</span>, <span class="s">"soc_initial"</span>: <span class="n">1.0</span>, <span class="s">"power_limit_kw"</span>: <span class="n">80</span>,
+    <span class="s">"cell"</span>: {
+      <span class="s">"capacity_ah"</span>: <span class="n">4.0</span>, <span class="s">"resistance_mohm"</span>: <span class="n">15</span>,
+      <span class="s">"voltage_min"</span>: <span class="n">2.8</span>, <span class="s">"voltage_max"</span>: <span class="n">4.2</span>,
+      <span class="s">"current_max_discharge_a"</span>: <span class="n">45</span>, <span class="s">"current_max_charge_a"</span>: <span class="n">10</span>,
+      <span class="s">"ocv"</span>: { <span class="s">"soc"</span>: [<span class="n">0.0</span>, <span class="n">0.05</span>, …, <span class="n">1.0</span>], <span class="s">"voltage"</span>: [<span class="n">3.0</span>, <span class="n">3.30</span>, …, <span class="n">4.18</span>] } } } }</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Parameter</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">series · parallel</td><td>–</td><td>Zellkonfiguration, z. B. 122s6p</td></tr>
+      <tr><td class="mono">soc_initial</td><td>–</td><td>Ladezustand beim Start, 0…1 (Vorgabe 1)</td></tr>
+      <tr><td class="mono">power_limit_kw</td><td>kW</td><td><em>optional</em> – Leistungsgrenze an den Klemmen, z. B. 80 kW nach FS-Reglement</td></tr>
+      <tr><td class="mono">cell.capacity_ah · resistance_mohm</td><td>Ah · mΩ</td><td>Zellkapazität und Innenwiderstand (DC). Pack: Kapazität × p, Widerstand × s / p</td></tr>
+      <tr><td class="mono">cell.ocv</td><td>– · V</td><td>Ruhespannung über SoC, aufsteigend, dazwischen linear</td></tr>
+      <tr><td class="mono">cell.voltage_min · voltage_max</td><td>V</td><td><em>optional</em> – Zellspannungsgrenzen; begrenzen den Strom so, dass die Klemmenspannung je Zelle nicht darunter bzw. darüber geht</td></tr>
+      <tr><td class="mono">cell.current_max_discharge_a · current_max_charge_a</td><td>A</td><td><em>optional</em> – Zellstromgrenzen</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Die Zellwerte der Beispieldatei sind typische Werte einer NMC-21700-Zelle, keine Datenblattwerte. Rekuperation, Temperatur und ein Wirkungsgradkennfeld der Motoren folgen in einer höheren Stufe.</p>
+  <div class="code"><span class="lbl">Report</span><pre>drivelab inspect battery data/battery/pack_122s6p.json --open</pre></div>
+  <p class="tight">Jeder Lauf mit Akku wird im Lauf-Report geprüft (Abschnitt „HV battery“, Tabelle „Checks“): Energie- und Ladungsbilanz, Ladezustand, Zellspannung, Zellstrom, Leistungsgrenze, verfügbare Leistung und ob die Motoren genau die Leistung des Akkus ziehen. Die Kenndaten des Packs stehen dazu in <span class="file">channels.json</span> unter <code>battery</code>.</p>
+</section>
+
+<section class="chap" id="bremse">
+  <div class="chap-head"><h2>Bremse</h2></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>type</th><th>Verhalten</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">"SimpleBrake"</td><td>Pedal → Druck → Klemmkraft → Radmoment, verteilt über <code>xi</code></td></tr>
+      <tr><td class="mono">"FmuBrake"</td><td>bindet eine <span class="file">.fmu</span> ein (FMI 3.0 Co-Simulation, 64 Bit Windows)</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><span class="lbl">JSON · SimpleBrake</span><pre>{ <span class="s">"type"</span>: <span class="s">"SimpleBrake"</span>,
+  <span class="s">"params"</span>: { <span class="s">"A"</span>: <span class="n">600.0</span>, <span class="s">"r"</span>: <span class="n">0.15</span>, <span class="s">"mu"</span>: <span class="n">0.5</span>, <span class="s">"pMax"</span>: <span class="n">120.0</span>, <span class="s">"xi"</span>: <span class="n">0.5</span> } }</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Parameter</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">A</td><td>mm²</td><td>Kolbenfläche des Bremssattels</td></tr>
+      <tr><td class="mono">r</td><td>m</td><td>wirksamer Reibradius</td></tr>
+      <tr><td class="mono">mu</td><td>–</td><td>Reibwert Belag/Scheibe</td></tr>
+      <tr><td class="mono">pMax</td><td>bar</td><td>Druck bei Pedal = 1 (Vorgabe 100)</td></tr>
+      <tr><td class="mono">xi</td><td>–</td><td>Heckanteil der Bremskraftverteilung 0…1 (Vorgabe 0,5)</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><span class="lbl">JSON · FmuBrake</span><pre>{ <span class="s">"type"</span>: <span class="s">"FmuBrake"</span>,
+  <span class="s">"fmuPath"</span>: <span class="s">"../fmu/SimpleBrake.fmu"</span>,
+  <span class="s">"mapping"</span>: {
+    <span class="s">"inputs"</span>:  { <span class="s">"pedal"</span>: <span class="s">"brakePedal"</span> },
+    <span class="s">"outputs"</span>: { <span class="s">"torque"</span>: [<span class="s">"torqueFL"</span>, <span class="s">"torqueFR"</span>, <span class="s">"torqueRL"</span>, <span class="s">"torqueRR"</span>] } } }</pre></div>
+  <p class="tight"><code>mapping</code> verbindet DriveLab mit den Variablennamen der FMU: ein Eingang für das Pedal, genau vier Radmomente VL, VR, HL, HR.</p>
+  <div class="code"><span class="lbl">Report</span><pre>drivelab inspect brake data/brake/simpleBrake.json --open</pre></div>
+</section>
+
+<section class="chap" id="lenkung">
+  <div class="chap-head"><h2>Lenkung</h2></div>
+  <p>Mit Lenksystem ist <code>steer</code> – vom Fahrer, von Steuergeräten oder aus Python – der <strong>Lenkradwinkel</strong>. Die Lenkung macht daraus den
+  Referenz-Radlenkwinkel vorne (Mittel links/rechts bei Hub 0); die Achskinematik verteilt ihn auf die Räder (Ackermann). Der Kanal <code>steer_road</code> zeigt ihn.
+  <code>type</code> wählt die Detailstufe.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>type</th><th>Stufe</th><th>Verhalten</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">"Ratio"</td><td>low</td><td>starre Lenkung: konstante oder variable Übersetzung, Anschlag am Lenkrad</td></tr>
+      <tr><td class="mono">"Compliant"</td><td>mid</td><td>wie <code>Ratio</code>, dazu Nachgiebigkeit: das Lenkachsmoment verdreht die Räder um M / c</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><span class="lbl">JSON · data/steering/ratio.json</span><pre>{ <span class="s">"type"</span>: <span class="s">"Ratio"</span>,
+  <span class="s">"params"</span>: { <span class="s">"ratio"</span>: <span class="n">5.0</span>, <span class="s">"handwheel_max_deg"</span>: <span class="n">150</span> } }</pre></div>
+  <div class="code"><span class="lbl">JSON · variable Übersetzung</span><pre>{ <span class="s">"type"</span>: <span class="s">"Ratio"</span>,
+  <span class="s">"params"</span>: {
+    <span class="s">"ratio_table"</span>: { <span class="s">"handwheel_deg"</span>: [<span class="n">0</span>, <span class="n">30</span>, <span class="n">90</span>], <span class="s">"ratio"</span>: [<span class="n">6.0</span>, <span class="n">6.0</span>, <span class="n">4.5</span>] },
+    <span class="s">"handwheel_max_deg"</span>: <span class="n">150</span> } }</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Parameter</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">ratio</td><td>–</td><td>Übersetzung i = Lenkradwinkel / Radlenkwinkel</td></tr>
+      <tr><td class="mono">ratio_table</td><td>deg · –</td><td>statt <code>ratio</code>: Übersetzung über |Lenkradwinkel|, dazwischen linear, jenseits der letzten Stützstelle konstant. Der Radlenkwinkel ist das Integral von dLenkrad / i.</td></tr>
+      <tr><td class="mono">handwheel_max_deg</td><td>deg</td><td><em>optional</em> – Anschlag; größere Lenkradwinkel werden begrenzt</td></tr>
+      <tr><td class="mono">stiffness_nm_per_deg</td><td>Nm/deg</td><td>nur <code>Compliant</code> – Steifigkeit von Lenksäule, Zahnstange und Spurstangen, bezogen auf den Radlenkwinkel, beide Räder zusammen</td></tr>
+      <tr><td class="mono">efficiency</td><td>–</td><td>nur <code>Compliant</code>, Vorgabe 1 – Anteil des Lenkachsmoments, der am Lenkrad ankommt</td></tr>
+    </tbody>
+  </table></div>
+  <h3 class="sub">Lenkachsmoment und Lenkradmoment</h3>
+  <p>Jedes Modell berechnet in jedem Rechenschritt das Moment der Reifenkräfte um beide Lenkachsen vorne:
+  <code>M = Σ e · (r × F + Mz·e_z)</code> mit Lenkachse <code>e</code>, Hebel <code>r</code> vom Durchstoßpunkt der Achse zum Aufstandspunkt und Reifenkraft <code>F</code> inklusive Radlast.
+  Darin stecken Rückstellmoment, Nachlaufstrecke × Seitenkraft, Lenkrollradius × Längskraft und die Gewichtsrückstellung aus Spreizung und Nachlauf.
+  Das Haltemoment am Lenkrad ist <code>−M · η / i</code> (Kanal <code>steer_torque</code>, + = der Fahrer hält nach links).
+  Die Lenkachse kommt aus der Kinematik; Einspur- und Zweispurmodell haben keine und nutzen nur Mz.</p>
+  <div class="note"><span class="t">Fahrer</span>
+  Der Bahnfolgeregler rechnet in Radlenkwinkeln und rechnet über die Lenkung des Fahrzeugs selbst auf den Lenkradwinkel um – auch bei variabler Übersetzung.
+  Skripte (<code>lenkwinkel</code>) und Python geben den Lenkradwinkel direkt vor.</div>
+  <div class="code"><span class="lbl">Report</span><pre>drivelab inspect steering data/steering/ratio.json --open</pre></div>
+</section>
+
+<section class="chap" id="aero">
+  <div class="chap-head"><h2>Aerodynamik</h2></div>
+  <div class="code"><span class="lbl">JSON · data/aero/simpleAero.json</span><pre>{ <span class="s">"type"</span>: <span class="s">"Simple"</span>, <span class="s">"params"</span>: { <span class="s">"cwA"</span>: <span class="n">0.65</span>, <span class="s">"clA"</span>: <span class="n">-3.0</span>, <span class="s">"balance"</span>: <span class="n">0.45</span> } }</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Parameter</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">cwA</td><td>m²</td><td>Luftwiderstandsbeiwert × Stirnfläche</td></tr>
+      <tr><td class="mono">clA</td><td>m²</td><td>Auftriebsbeiwert × Fläche. <strong>&gt; 0 = Auftrieb</strong> (senkt die Radlast), &lt; 0 = Abtrieb</td></tr>
+      <tr><td class="mono">balance</td><td>–</td><td>optional. Anteil der aerodynamischen Radlaständerung an der Vorderachse (0,45 = 45 % vorne), so wie Windkanal oder CFD ihn an den Achsen ausgeben – also einschließlich des Nickmoments aus dem Widerstand. Im <code>vehicle</code>-Block: <code>aero_balance</code></td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Fehlen <code>components.aero</code> und <code>cwA</code>/<code>clA</code> im <code>vehicle</code>-Block, bricht der Aufbau mit einer Meldung ab – es gibt keine stillen Vorgabewerte.</p>
+  <p class="tight"><strong>Mit <code>balance</code></strong> greifen Abtrieb und Widerstand auf der Fahrbahn an, längs bei <code>x = balance·(l_v+l_h) − l_h</code> vor dem Schwerpunkt. Dann ändern sich die Achslasten genau um <code>balance·F_down</code> vorne und <code>(1−balance)·F_down</code> hinten. <strong>Ohne</strong> greift die Kraft im Schwerpunkt an (Zweispur, MKS: Abtrieb nach statischer Achslastverteilung, Widerstand entlastet vorne; Einspur: 50 % vorne). Ist ein Druckpunkt aus der CFD bekannt (x<sub>CoP</sub> vor der Hinterachse, auf der Fahrbahn), gilt <code>balance = x<sub>CoP</sub>/(l_v+l_h)</code>.</p>
+  <p class="tight">In den Kanälen: <code>F_drag</code>, <code>F_down</code>, <code>F_down_f</code>.</p>
+  <div class="code"><span class="lbl">Report</span><pre>drivelab inspect aero data/aero/simpleAero.json --open</pre></div>
+</section>
+
+<section class="chap" id="federung">
+  <div class="chap-head"><h2>Federung (nur MKS)</h2></div>
+  <p>Typ <code>"DecoupledRollHeave"</code>: Hub- und Wankbewegung einer Achse getrennt gefedert und gedämpft, wie bei einem Rennfahrzeug mit Heave- und Roll-Element. Kennwerte am Rad, linear.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Block</th><th>Schlüssel</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">heave · roll</td><td class="mono">motion_ratio · wheel_rate · preload · damping_bump · damping_rebound · bumpstop{gap, rate}</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><span class="t">Radbezogen</span> Alle Raten und Dämpfungen gelten am Rad. <code>motion_ratio</code> rechnet nur für die Diagnose auf das Bauteil um: Federweg = MR · Radweg, Federrate = wheel_rate / MR².</div>
+  <h3 class="sub">Aus der Wippengeometrie: "DecoupledRocker"</h3>
+  <p>Statt Radraten gibst du die Punkte der beiden Wippen und Feder/Dämpfer <strong>am Element</strong> an. Übersetzung, Progression und
+  Kopplung zwischen Heave und Roll folgen aus der Geometrie. Der Pushrod-Fuß folgt der Bahn des Kugelgelenks, an dem er sitzt
+  (<code>kinematics</code>: Hardpoint-Datei der linken Ecke). Ohne <code>kinematics</code> gilt die Tabelle <code>rocker_angle</code>
+  (z. B. aus einer CAD-Bewegungsstudie), ohne beides bewegt sich der Fuß senkrecht mit dem Radweg. Sind <code>kinematics</code> und
+  <code>rocker_angle</code> angegeben, rechnet DriveLab mit der Kinematik; <code>inspect sds</code> zeigt die Tabelle dann zum Vergleich
+  und die größte Abweichung.</p>
+  <div class="code"><span class="lbl">JSON · data/sds/rocker_va.json (Beispielprojekt, Demo-Geometrie)</span><pre>{ <span class="s">"type"</span>: <span class="s">"DecoupledRocker"</span>, <span class="s">"axle"</span>: <span class="s">"front"</span>,
+  <span class="s">"rocker_left"</span>:  { <span class="s">"pivot"</span>: [<span class="n">0.12</span>, <span class="n">0.55</span>], <span class="s">"push"</span>: [<span class="n">0.27</span>, <span class="n">0.55</span>], <span class="s">"foot"</span>: [<span class="n">0.27</span>, <span class="n">0.2</span>] },
+  <span class="s">"rocker_right"</span>: { … gespiegelt … },
+  <span class="s">"heave_coilover"</span>: { <span class="s">"left"</span>: [<span class="n">0.12</span>, <span class="n">0.63</span>], <span class="s">"right"</span>: [<span class="n">-0.12</span>, <span class="n">0.63</span>] },
+  <span class="s">"roll_coilover"</span>:  { <span class="s">"left"</span>: [<span class="n">0.07</span>, <span class="n">0.6</span>], <span class="s">"right"</span>: [<span class="n">-0.07</span>, <span class="n">0.5</span>] },
+  <span class="s">"heave"</span>: { <span class="s">"spring_rate"</span>: <span class="n">114300</span>, <span class="s">"preload"</span>: <span class="n">6000</span>, <span class="s">"damping_bump"</span>: <span class="n">6150</span>, <span class="s">"damping_rebound"</span>: <span class="n">9670</span>,
+             <span class="s">"bumpstop"</span>: { <span class="s">"gap"</span>: <span class="n">0.0238</span>, <span class="s">"rate"</span>: <span class="n">960000</span> } },
+  <span class="s">"roll"</span>:  { <span class="s">"spring_rate"</span>: <span class="n">110950</span>, <span class="s">"damping"</span>: <span class="n">6330</span> } }</pre></div>
+  <p class="tight">Das Beispielprojekt enthält <code>rocker_va.json</code>/<code>rocker_ha.json</code> mit denselben Radraten wie <code>sds_va.json</code>/<code>sds_ha.json</code>. Zum Ausprobieren in <code>MKS.json</code> unter <code>sds</code> eintragen. Mit eigener Geometrie und <code>kinematics</code> muss die Hardpoint-Datei an dem Pfad liegen, der relativ zur SDS-Datei angegeben ist.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Schlüssel</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">rocker_left · rocker_right</td><td>m (y, z)</td><td><code>pivot</code> Wippenlager, <code>push</code> Pushrod-Anlenkung an der Wippe, <code>foot</code> Pushrod-Fuß am Radträger bzw. Querlenker. Wippen drehen in der y-z-Ebene</td></tr>
+      <tr><td class="mono">heave_coilover · roll_coilover</td><td>m (y, z)</td><td>Anlenkpunkte des Elements auf linker und rechter Wippe</td></tr>
+      <tr><td class="mono">kinematics</td><td>Pfad</td><td><em>optional</em> – Hardpoint-Datei (<code>DoubleWishbone</code>); <code>foot</code> muss auf 2 mm am oberen oder unteren Kugelgelenk liegen</td></tr>
+      <tr><td class="mono">rocker_angle</td><td>mm · deg</td><td><em>optional</em> – <code>{ "travel_mm": [-40, 0, 40], "deg": [-30.7, 0, 28.0] }</code>: Winkel der <strong>linken</strong> Wippe über dem Radweg, + = gegen den Uhrzeigersinn von vorn gesehen; rechts gespiegelt. Radwege aufsteigend, 0 eingeschlossen; der Wert bei 0 wird abgezogen. Zwischen den Stützstellen kubischer Spline, außerhalb linear fortgesetzt – die Tabelle sollte den Federweg abdecken</td></tr>
+      <tr><td class="mono">heave · roll</td><td>N/m · N · Ns/m · m</td><td>am Element: <code>spring_rate</code>, <code>preload</code> (Elementkraft in Konstruktionslage, trägt das Fahrzeug), <code>damping</code> oder <code>damping_bump</code>/<code>damping_rebound</code>, <code>bumpstop{gap, rate}</code> (Elementweg). <code>wheel_rate</code> und <code>motion_ratio</code> sind hier nicht erlaubt</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Die Radrate enthält auch die Vorspannung über die veränderliche Übersetzung. Bei einem Heave-Element, das sich beim Wanken leicht verkürzt,
+  macht dessen Vorspannung die Achse in Rolle steifer; verlängert es sich, wird sie weicher – bei großer Heave-Kraft (z. B. im Anschlag) bis zur negativen Wanksteifigkeit. Das zeigt der Report (Kopplung). Außerhalb des lösbaren Radwegs (Wippe im Totpunkt) wird die Übersetzung vom Rand aus linear fortgesetzt; der Report zeigt den Bereich, er sollte den realen Federweg mit Reserve abdecken.
+  <code>inspect sds</code> zeigt zusätzlich Übersetzung, Kopplung und Wippenwinkel über dem Radweg.</p>
+  <div class="code"><span class="lbl">Report</span><pre>drivelab inspect sds data/sds/sds_va.json --open
+drivelab inspect sds data/sds/rocker_va.json --open</pre></div>
+</section>
+
+<section class="chap" id="kinematik">
+  <div class="chap-head"><h2>Kinematik (nur MKS)</h2></div>
+  <p>Je Achse eine Datei, in zwei Formen: als <strong>Soll</strong> über Kennwerte (<code>"type": "Parametric"</code>) oder als <strong>Ist</strong>
+  über Hardpoints (<code>"type": "DoubleWishbone"</code>). Beide lassen sich in der Fahrzeugdatei gegeneinander tauschen – so zeigt derselbe Lauf,
+  was die Zielwerte bringen und was die reale Achse davon trifft.</p>
+  <h3 class="sub">Soll: Kennwerte</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Schlüssel in params</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">camber_static_deg · camber_gain_deg_per_mm</td><td>deg · deg/mm</td><td>Sturz bei Hub 0 und Änderung je mm Einfedern; positiv = Radoberkante außen</td></tr>
+      <tr><td class="mono">toe_static_deg · bump_steer_deg_per_mm</td><td>deg · deg/mm</td><td>Vorspur je Rad und ihre Änderung je mm Einfedern (Wanklenken)</td></tr>
+      <tr><td class="mono">ackermann_pct</td><td>%</td><td>100 = ideal (Kurvenmitte auf Hinterachsverlängerung), 0 = parallel, negativ = Anti-Ackermann. Nur Vorderachse</td></tr>
+      <tr><td class="mono">track_change_mm_per_mm</td><td>mm/mm</td><td>Spurweitenänderung je Rad je mm Einfedern, positiv = nach außen</td></tr>
+      <tr><td class="mono">roll_center_height_mm · roll_center_migration_mm_per_mm</td><td>mm · mm/mm</td><td>Wankzentrum über Fahrbahn bei Hub 0 und seine Änderung beim Einfedern beider Räder (typisch −1 … −2)</td></tr>
+      <tr><td class="mono">anti_pct</td><td>%</td><td>Anti-Dive/-Lift (vorn) bzw. Anti-Squat/-Lift (hinten) für Radnabenmotoren und außenliegende Bremsen. 100 % = Linie Aufstandspunkt → Seitenansichtspol mit Neigung h<sub>SP</sub> / Radstand</td></tr>
+      <tr><td class="mono">caster_deg · kpi_deg</td><td>deg</td><td>Nachlauf und Spreizung der Lenkachse; bestimmen die Sturzänderung beim Lenken (kurvenäußeres Rad negativer)</td></tr>
+      <tr><td class="mono">caster_trail_mm · scrub_radius_mm</td><td>mm</td><td>Nachlaufstrecke (&gt; 0 = Aufstandspunkt hinter der Lenkachse) und Lenkrollradius (&gt; 0 = Aufstandspunkt außen) am Boden; Vorgabe 0. Wirken auf das Lenkachsmoment</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight"><strong>Kraftübertragung:</strong> Wankzentrum und Anti-Geometrie wirken im MKS. Jede Radecke überträgt zusätzlich zur Feder
+  die Vertikalkraft <code>F_jack = Fy · s<sub>y</sub> + Fx · s<sub>x</sub></code> in den Aufbau, s = Neigung der Linie Aufstandspunkt → Momentanpol.
+  Bei Hardpoints kommt s aus der Bahn des Aufstandspunkts beim Einfedern, bei Kennwerten aus Wankzentrum und <code>anti_pct</code>.
+  Wankzentrum auf Schwerpunkthöhe: das Fahrzeug wankt nur noch über die Reifeneinfederung.</p>
+  <p class="tight">Radstand und Spurweite für den Ackermann kommen aus der Fahrzeugdatei. Der Lenkeingang <code>steer</code> ist der mittlere Radlenkwinkel vorne;
+  wie er sich auf innen und außen verteilt, bestimmt die Achse. Beispiele: <span class="file">data/kinematics/soll_VA.json</span>, <span class="file">soll_HA.json</span>.
+  </p>
+  <h3 class="sub">Ist: Hardpoints</h3>
+  <p>Eine <strong>linke</strong> Doppelquerlenker-Ecke über Hardpoints im Fahrzeugsystem (x vorn, y links, z oben, Meter). Die rechte Seite wird gespiegelt.
+  Im Lauf wird die Achse beim Start als Kennfeld über Hub (±80 mm) und Zahnstange tabelliert; der Zahnstangenweg folgt aus dem Lenkeingang.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Schlüssel</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">hardpoints.lca_front · lca_rear · lca_outer</td><td>unterer Querlenker: zwei Lager am Aufbau, Kugelgelenk am Radträger</td></tr>
+      <tr><td class="mono">hardpoints.uca_front · uca_rear · uca_outer</td><td>oberer Querlenker</td></tr>
+      <tr><td class="mono">hardpoints.tie_inner · tie_outer</td><td>Spurstange</td></tr>
+      <tr><td class="mono">hardpoints.wheel_center</td><td>Radmittelpunkt</td></tr>
+      <tr><td class="mono">spin_axis · rack_axis</td><td>Raddrehachse · Bewegungsrichtung der Zahnstange</td></tr>
+      <tr><td class="mono">tire_radius</td><td>Reifenradius [m], bestimmt den Aufstandspunkt</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><span class="lbl">Report</span><pre>drivelab inspect kinematics data/kinematics/front.json --open</pre></div>
+  <p class="tight">Zeigt Sturz, Spur, Nachlauf und Spurweitenänderung über dem Federweg, dazu Kennwerte wie Sturzänderung, Bump Steer und Lenkrollradius.
+  Für beide Typen außerdem Radlenkwinkel links/rechts und Ackermann-Anteil über dem Lenkwinkel sowie die Wankzentrumshöhe über dem Hub –
+  ohne Fahrzeug bezogen auf 1,55 m Radstand.</p>
+</section>
+
+<section class="chap" id="setup">
+  <div class="chap-head"><h2>Setup (nur MKS)</h2></div>
+  <p>Einstellwerte stehen im Block <code>setup</code> der Fahrzeugdatei und wirken auf beide Kinematik-Formen gleich. So lassen sich Setup-Varianten
+  vergleichen, ohne Kinematikdateien oder Hardpoints anzufassen.</p>
+  <div class="code"><span class="lbl">JSON · Fahrzeugdatei</span><pre>"setup": {
+  "front": { "camber_deg": -1.0, "toe_deg": 0.2, "ride_height_mm": 0 },
+  "rear":  { "camber_deg":  0.0, "toe_deg": 0.0, "ride_height_mm": 10 }
+}</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Schlüssel</th><th>Wirkung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">camber_deg</td><td>zusätzlicher Sturz je Rad (positiv = Oberkante außen), wie Shims – ohne Rückwirkung auf die übrige Geometrie</td></tr>
+      <tr><td class="mono">toe_deg</td><td>zusätzliche Vorspur je Rad, wie an der Spurstange verstellt</td></tr>
+      <tr><td class="mono">ride_height_mm</td><td>Fahrzeughöhe: höher = Räder weiter ausgefedert. Verschiebt Sturz, Spur und Wankzentrum entlang ihrer Kennlinien und hebt den Schwerpunkt</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Zweispur- und Einspurmodell ignorieren <code>setup</code> mit einer Warnung.</p>
+</section>
+
+</div></main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

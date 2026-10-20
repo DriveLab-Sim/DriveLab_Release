@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Steuergeräte (SDK) · DriveLab</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="steuergeraete.html" data-root="" data-track="user">
+<div class="shell">
+<aside class="side" id="side"></aside>
+<main class="main"><div class="page">
+
+<header class="page-head">
+  <span class="k">Anwender · 7</span>
+  <h1>Steuergeräte (SDK)</h1>
+  <p class="lede">Ein Steuergerät ist eine eigene Bibliothek (<code>.dll</code>), die du außerhalb von DriveLab baust. DriveLab lädt sie zur Laufzeit, hängt sie an einen virtuellen CAN-Bus und ruft sie in ihrem Takt auf – DriveLab selbst wird nie neu übersetzt.</p>
+</header>
+<section class="chap" id="ueberblick">
+  <div class="chap-head"><h2>Überblick</h2></div>
+  <p>Dein Steuergerät sieht vom Bus nur <strong>benannte Signale in physikalischen Einheiten</strong> –
+  <code>DriverInputs.AcceleratorPedal</code> in Prozent, nicht Byte 0. Packen und Entpacken übernimmt DriveLab anhand der DBC.</p>
+  <p>Das SDK liegt im Installationsordner unter <span class="file">sdk</span>:</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Ordner</th><th>Inhalt</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">include/</td><td>die Schnittstelle: <code>drivelab_ecu.h</code> (C) und <code>drivelab_ecu.hpp</code> (C++)</td></tr>
+      <tr><td class="mono">src/</td><td><code>drivelab_ecu_runtime.c</code> – wird automatisch mitgebaut</td></tr>
+      <tr><td class="mono">cmake/</td><td>CMake-Paket mit <code>drivelab_add_ecu()</code></td></tr>
+      <tr><td class="mono">templates/ecu-project/</td><td>Vorlage für <code>drivelab ecu new</code></td></tr>
+      <tr><td class="mono">examples/</td><td>die zwei Steuergeräte der Projektvorlage, in C++ und C</td></tr>
+    </tbody>
+  </table></div>
+  <h3 class="sub">Voraussetzungen</h3>
+  <ul class="list">
+    <li><strong>CMake 3.21</strong> oder neuer</li>
+    <li>ein <strong>64-Bit-Compiler</strong>: MinGW-w64 (z. B. WinLibs oder MSYS2) oder Visual Studio 2022</li>
+    <li>optional die <strong>GNU Arm Embedded Toolchain</strong> für die <a href="#regeln">Target-Gegenprobe</a></li>
+  </ul>
+  <div class="note"><span class="t">Installation per winget</span>
+  <code>winget install Kitware.CMake</code> und <code>winget install BrechtSanders.WinLibs.POSIX.UCRT</code>.
+  Das WinLibs-Paket ist groß und lädt lange. Danach ein <em>neues</em> Terminal öffnen, sonst fehlen die Programme im <code>PATH</code>.</div>
+</section>
+
+<section class="chap" id="schnellstart">
+  <div class="chap-head"><h2>Schnellstart</h2></div>
+  <p>Du tauschst im Standardprojekt das Powertrain-Steuergerät gegen ein eigenes aus.</p>
+  <h3 class="sub">1 · Projekt anlegen und das Netz ansehen</h3>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>drivelab new MeinProjekt
+drivelab ecu list MeinProjekt</pre></div>
+  <p>Das Standardprojekt bringt zwei Steuergeräte mit: <code>Powertrain</code> macht aus der Pedalstellung eine
+  Momentenanforderung und begrenzt die Motordrehzahl, <code>Motor</code> setzt die Anforderung ans Fahrzeug um.</p>
+  <h3 class="sub">2 · Eigenes Steuergerät anlegen und bauen</h3>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>drivelab ecu new PedalMap
+cd %USERPROFILE%\Documents\DriveLab\ecus\PedalMap
+cmake --preset mingw
+cmake --build --preset mingw</pre></div>
+  <p>Mit Visual Studio statt MinGW: <code>--preset msvc</code>. Heraus kommt <span class="file">build/mingw/pedal_map.dll</span>.</p>
+  <h3 class="sub">3 · Prüfen, was in der Bibliothek steckt</h3>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>drivelab ecu check build/mingw/pedal_map.dll</pre></div>
+  <h3 class="sub">4 · Ins Fahrzeug einhängen</h3>
+  <p><span class="file">pedal_map.dll</span> nach <span class="file">projects/MeinProjekt/data/vECU/EE1/bin/</span> kopieren. In der
+  <code>network.json</code> daneben beim Eintrag <code>Powertrain</code> Name und Bibliothek ändern; Takt und Versatz bleiben:</p>
+  <div class="code"><span class="lbl">JSON</span><pre>{
+  &quot;name&quot;: &quot;PedalMap&quot;,
+  &quot;type&quot;: &quot;native&quot;,
+  &quot;period_ms&quot;: 10,
+  &quot;offset_ms&quot;: 1,
+  &quot;params&quot;: { &quot;library&quot;: &quot;./bin/pedal_map&quot;, &quot;gain&quot;: 1.5 }
+}</pre></div>
+  <div class="note warn"><span class="t">Ersetzen, nicht ergänzen</span>
+  <code>PedalMap</code> sendet wie <code>Powertrain</code> die Botschaft <code>TorqueRequest</code>. Zwei Sender für eine Botschaft lehnt DriveLab ab.</div>
+  <h3 class="sub">5 · Laufen lassen</h3>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>drivelab validate MeinProjekt
+drivelab run MeinProjekt</pre></div>
+  <p>In <span class="file">can.tsv</span> folgt <code>TorqueRequest.RequestedTorque</code> jetzt direkt dem Pedal (× 1,5), ohne Rampe und Drehzahlbegrenzung.
+  Ab hier ist die Schleife immer gleich: Quelltext ändern, bauen, DLL kopieren, <code>drivelab run</code>. Nur Parameter aus der
+  <code>network.json</code> zu ändern braucht keinen Neubau.</p>
+</section>
+
+<section class="chap" id="aufbau">
+  <div class="chap-head"><h2>Aufbau eines Steuergeräts</h2></div>
+  <p>So sieht das Steuergerät aus, das <code>drivelab ecu new</code> anlegt (gekürzt, <code>clampf</code> ist eine kleine Hilfsfunktion oben in der Datei):</p>
+  <div class="code"><span class="lbl">C++</span><pre>#include &quot;drivelab_ecu.hpp&quot;
+
+class PedalMap : public drivelab::Ecu
+{
+public:
+    dl_status create(drivelab::Context&amp; ctx) override
+    {
+        pedal_ = ctx.input(&quot;DriverInputs.AcceleratorPedal&quot;);
+        torqueRequest_ = ctx.output(&quot;TorqueRequest.RequestedTorque&quot;);
+
+        if (!pedal_ || !torqueRequest_) {
+            return DL_ERROR_SIGNAL;
+        }
+
+        gain_ = ctx.param(&quot;gain&quot;, 1.5f);
+        timeout_ = ctx.param(&quot;timeout&quot;, 0.05f);
+
+        return DL_OK;
+    }
+
+    void reset(drivelab::Context&amp;) override
+    {
+        torque_ = 0.0f;
+    }
+
+    void step(drivelab::Context&amp; ctx, float t, float dt) override
+    {
+        if (!ctx.isFresh(pedal_, timeout_)) {
+            ctx.write(torqueRequest_, 0.0f);
+            ctx.fault(0x0001, DL_SEVERITY_WARNING);
+            return;
+        }
+
+        torque_ = clampf(ctx.read(pedal_), 0.0f, 100.0f) * gain_;
+        ctx.write(torqueRequest_, torque_);
+    }
+
+private:
+    drivelab::Signal pedal_;
+    drivelab::Signal torqueRequest_;
+    float gain_ = 1.5f;
+    float timeout_ = 0.05f;
+    float torque_ = 0.0f;
+};
+
+DRIVELAB_ECU(PedalMap, &quot;PedalMap&quot;);</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Teil</th><th>Wann</th><th>Aufgabe</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">create</td><td>einmal beim Aufbau</td><td>Signalnamen auflösen, Parameter lesen – nur hier sind Strings erlaubt. Alles außer <code>DL_OK</code> bricht den Aufbau mit einer Meldung ab, die das Signal beim Namen nennt.</td></tr>
+      <tr><td class="mono">reset</td><td>vor jedem Lauf</td><td>alle internen Zustände zurücksetzen, sonst startet der zweite Lauf mit den Werten vom Ende des ersten</td></tr>
+      <tr><td class="mono">step</td><td>jeden Zyklus</td><td>der zyklische Task. <code>dt</code> ist die <em>eigene</em> Zykluszeit aus der <code>network.json</code>, nicht der Simulationsschritt.</td></tr>
+      <tr><td class="mono">onFrame</td><td>optional</td><td>sieht jeden Rohframe auf dem Bus – für Diagnose oder Gateways</td></tr>
+      <tr><td class="mono">DRIVELAB_ECU(Klasse, "Name")</td><td>einmal je Bibliothek</td><td>erzeugt alles, was DriveLab zum Laden braucht; am Dateiende</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="chap" id="signale">
+  <div class="chap-head"><h2>Signale, Parameter, Fehlerspeicher</h2></div>
+  <h3 class="sub">Signale</h3>
+  <p>Signale heißen <code>Botschaft.Signal</code>, wie in der DBC.</p>
+  <ul class="list">
+    <li><strong><code>output</code> meldet an, dass dieses Steuergerät die ganze Botschaft sendet.</strong> Jede Botschaft hat genau einen Sender.</li>
+    <li>Gibt es das Signal nicht, ist der Handle ungültig (<code>!in</code> ist wahr). Ob das ein Fehler ist, entscheidest du.</li>
+    <li><code>read</code> und <code>write</code> arbeiten in physikalischen Einheiten als <code>float</code>. Werte außerhalb des DBC-Bereichs werden auf die Grenze gesetzt.</li>
+    <li><code>isFresh(signal, maxAlter)</code> und <code>age(signal)</code> sagen, wann das Signal zuletzt ankam. Ein nie empfangenes Signal ist nicht frisch und liest sich als 0.</li>
+  </ul>
+  <h3 class="sub">Parameter</h3>
+  <p>Alles unter <code>params</code> in der <code>network.json</code> kommt beim Steuergerät an:</p>
+  <div class="code"><span class="lbl">C++</span><pre>float   gain    = ctx.param(&quot;gain&quot;, 1.5f);        // Zahl
+int32_t mode    = ctx.param(&quot;mode&quot;, int32_t{0});  // ganze Zahl
+bool    enabled = ctx.param(&quot;enabled&quot;, true);     // Wahrheitswert
+
+float    map[16];
+uint32_t n = ctx.paramArray(&quot;kennlinie&quot;, map, 16);   // Zahlenliste</pre></div>
+  <p>Fehlt ein Parameter, gilt der Vorgabewert. <code>library</code> und <code>ecu</code> sind reserviert.</p>
+  <h3 class="sub">Fehlerspeicher</h3>
+  <div class="code"><span class="lbl">C++</span><pre>ctx.fault(0x0101, DL_SEVERITY_WARNING, &quot;Pedal fehlt&quot;);</pre></div>
+  <p>Wie in einem echten Steuergerät gibt es <strong>einen Eintrag je Code</strong>, mit Zähler sowie erstem und letztem Auftreten. Beim ersten Auftreten steht eine Zeile im
+  Log, am Ende liegt der Speicher als <span class="file">ecu_faults.tsv</span> im Laufordner. Stufen: <code>DL_SEVERITY_INFO</code>, <code>_WARNING</code>, <code>_ERROR</code>; der Lauf bricht bei keiner ab.</p>
+</section>
+
+<section class="chap" id="zeit">
+  <div class="chap-head"><h2>Zeitverhalten</h2></div>
+  <p>Jedes Steuergerät läuft mit <code>period_ms</code> und optional <code>offset_ms</code>, beides Vielfache des Grundtakts <code>base_dt_ms</code>.
+  Eine Botschaft, die in einem Takt gesendet wird, kommt <strong>im nächsten Grundtakt</strong> an. Das bildet die Übertragung ab und macht das Ergebnis
+  unabhängig von der Reihenfolge in der <code>network.json</code>.</p>
+  <p>Mit dem Versatz legst du eine Kette so, dass jedes Steuergerät rechnet, kurz nachdem seine Eingänge angekommen sind:</p>
+  <div class="pipe">
+    <div class="step"><span class="k">0 ms · Fahrzeug</span><span class="v">sendet Pedal und Fahrzustand</span></div>
+    <div class="arr">→</div>
+    <div class="step"><span class="k">1 ms · Powertrain</span><span class="v">liest sie, sendet TorqueRequest</span></div>
+    <div class="arr">→</div>
+    <div class="step"><span class="k">2 ms · Motor</span><span class="v">liest sie, sendet ActuatorCommand</span></div>
+    <div class="arr">→</div>
+    <div class="step"><span class="k">10 ms · Fahrzeug</span><span class="v">übernimmt den Stellbefehl</span></div>
+  </div>
+  <p class="tight">Ohne Versatz – alle bei 0 ms – wäre dieselbe Kette 20 ms statt 10 ms unterwegs. <code>drivelab inspect vehicle</code> rechnet diese Laufzeiten für jede Wirkkette aus.</p>
+</section>
+
+<section class="chap" id="network">
+  <div class="chap-head"><h2>Die network.json</h2></div>
+  <p>Sie beschreibt das Netz eines Fahrzeugs und hängt in der <strong>Fahrzeugdatei</strong> unter <code>components.ecus</code>, relativ zu dieser.</p>
+  <div class="code"><span class="lbl">JSON</span><pre>{
+  &quot;base_dt_ms&quot;: 1,
+  &quot;dbc&quot;: &quot;./EE1.dbc&quot;,
+
+  &quot;messages&quot;: {
+    &quot;DriverInputs&quot;: 10
+  },
+
+  &quot;plant&quot;: {
+    &quot;period_ms&quot;: 10,
+    &quot;publish&quot;: {
+      &quot;DriverInputs.AcceleratorPedal&quot;: { &quot;quantity&quot;: &quot;driver:throttle&quot;, &quot;scale&quot;: 100.0 },
+      &quot;VehicleState.VehicleSpeed&quot;:     &quot;vx&quot;
+    },
+    &quot;subscribe&quot;: {
+      &quot;throttle&quot;: &quot;ActuatorCommand.ThrottleCommand&quot;,
+      &quot;brake&quot;:    &quot;ActuatorCommand.BrakeCommand&quot;
+    }
+  },
+
+  &quot;ecus&quot;: [
+    { &quot;name&quot;: &quot;Powertrain&quot;, &quot;type&quot;: &quot;native&quot;, &quot;period_ms&quot;: 10, &quot;offset_ms&quot;: 1,
+      &quot;params&quot;: { &quot;library&quot;: &quot;./bin/powertrain_ecu&quot;, &quot;max_torque&quot;: 150.0 } }
+  ]
+}</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Eintrag</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">base_dt_ms</td><td>Grundtakt; alle Zykluszeiten sind Vielfache davon</td></tr>
+      <tr><td class="mono">dbc</td><td>Busbeschreibung, relativ zur <code>network.json</code></td></tr>
+      <tr><td class="mono">messages</td><td>Zykluszeit je Botschaft in ms; fehlt eine, gilt der Takt ihres Senders</td></tr>
+      <tr><td class="mono">plant.publish</td><td>was das Fahrzeug auf den Bus legt: Signal → Größe, optional mit <code>scale</code> und <code>offset</code></td></tr>
+      <tr><td class="mono">plant.subscribe</td><td>welche Signale beim Fahrzeug ankommen: <code>steer</code>, <code>throttle</code>, <code>brake</code>. Was fehlt, kommt direkt vom Fahrer.</td></tr>
+      <tr><td class="mono">ecus</td><td>die Steuergeräte; <code>params.library</code> relativ zur <code>network.json</code>, Endung darf fehlen</td></tr>
+      <tr><td class="mono">trace · trace_file</td><td><code>false</code> schaltet den Mitschnitt ab · Dateiname, Vorgabe <code>can.tsv</code></td></tr>
+    </tbody>
+  </table></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Größe für plant.publish</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">t · vx · vy · speed · ax · ay · yaw_rate</td><td>Fahrzustand</td></tr>
+      <tr><td class="mono">driver:throttle · driver:brake · driver:steer</td><td>Fahrerwunsch</td></tr>
+      <tr><td class="mono">out:&lt;Name&gt;</td><td>Ausgang des Fahrzeugmodells, z. B. <code>out:omega_motor_h</code></td></tr>
+      <tr><td class="mono">state:&lt;Name&gt;</td><td>Zustandsgröße des Fahrzeugmodells</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Ein Eintrag darf in einer eigenen Datei stehen: <code>{ "name": "Powertrain", "config": "./Powertrain.json" }</code>; was zusätzlich im Eintrag steht, gewinnt.
+  Stecken mehrere Steuergeräte in einer Bibliothek, wählt <code>"ecu": "&lt;Name&gt;"</code> in den <code>params</code> eines aus – welche es gibt, zeigt <code>drivelab ecu check</code>.</p>
+</section>
+
+<section class="chap" id="bauen">
+  <div class="chap-head"><h2>Bauen</h2></div>
+  <p>Die <span class="file">CMakeLists.txt</span> von <code>drivelab ecu new</code> ist im Kern:</p>
+  <div class="code"><span class="lbl">CMake</span><pre>find_package(DriveLabSDK REQUIRED)
+drivelab_add_ecu(pedal_map src/PedalMap.cpp)</pre></div>
+  <p><code>drivelab_add_ecu</code> setzt alles, was ein Steuergerät braucht: keine Exceptions, kein RTTI, Compiler-Laufzeit fest hineingelinkt, nur der Einsprung exportiert.
+  Den Pfad zum SDK hat <code>ecu new</code> in die <span class="file">CMakePresets.json</span> geschrieben. Ohne Presets:</p>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>cmake -B build -DDriveLabSDK_ROOT=%LOCALAPPDATA%/Programs/DriveLab/sdk
+cmake --build build</pre></div>
+  <p>Mehrere Steuergeräte sind mehrere Aufrufe. Mit <code>DEPLOY_DIR</code> landet die Bibliothek nach jedem Bauen direkt im Projekt:</p>
+  <div class="code"><span class="lbl">CMake</span><pre>drivelab_add_ecu(pedal_map src/PedalMap.cpp
+    DEPLOY_DIR &quot;C:/Users/.../Documents/DriveLab/projects/MeinProjekt/data/vECU/EE1/bin&quot;)</pre></div>
+</section>
+
+<section class="chap" id="regeln">
+  <div class="chap-head"><h2>Regeln für Steuergeräte-Code</h2></div>
+  <p>Derselbe Quelltext soll später auch auf einem Mikrocontroller laufen. Deshalb gilt im Steuergerät:</p>
+  <ul class="list">
+    <li><strong>keine Exceptions, kein RTTI</strong> – schaltet <code>drivelab_add_ecu</code> ab</li>
+    <li><strong>kein Heap</strong>: kein <code>new</code>, <code>malloc</code>, <code>std::vector</code>, <code>std::string</code>, <code>std::map</code>. Feste Arrays als Klassenmitglieder gehen.</li>
+    <li><strong><code>float</code> statt <code>double</code></strong> – ein STM32 rechnet <code>double</code> in Software</li>
+  </ul>
+  <h3 class="sub">Target-Gegenprobe</h3>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>cmake --preset mingw -DDRIVELAB_ECU_CHECK_TARGET=ON
+cmake --build --preset mingw</pre></div>
+  <p>Mit der GNU Arm Embedded Toolchain im <code>PATH</code> wird das Steuergerät bei jedem Bauen zusätzlich für einen Cortex-M4 übersetzt. Es entsteht nichts Lauffähiges –
+  der Build bricht nur ab, sobald etwas im Code steht, das auf einem Mikrocontroller nicht geht.</p>
+  <h3 class="sub">In C statt C++</h3>
+  <p><code>drivelab_ecu.hpp</code> ist ein Komfort-Aufsatz; die eigentliche Schnittstelle ist reines C in <code>drivelab_ecu.h</code>.
+  Ein vollständiges Beispiel: <span class="file">sdk/examples/MotorEcu.c</span>.</p>
+</section>
+
+<section class="chap" id="fehler">
+  <div class="chap-head"><h2>Fehlersuche und Grenzen</h2></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Meldung (Auszug)</th><th>Ursache und Abhilfe</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">Bibliothek nicht gefunden</td><td>Pfad in <code>params.library</code> stimmt nicht; er ist relativ zur <code>network.json</code>.</td></tr>
+      <tr><td class="mono">Windows-Fehler 126</td><td>Der Bibliothek fehlt eine DLL. Mit <code>drivelab_add_ecu</code> gebaut? Die Meldung nennt den Befehl zum Nachsehen.</td></tr>
+      <tr><td class="mono">Windows-Fehler 193</td><td>32/64 Bit gemischt. DriveLab ist 64 Bit.</td></tr>
+      <tr><td class="mono">Einsprung drivelab_ecu_main fehlt</td><td><code>DRIVELAB_ECU(...)</code> fehlt am Dateiende, oder es ist keine Steuergeräte-Bibliothek.</td></tr>
+      <tr><td class="mono">Steuergeraet lehnt ABI ... ab</td><td>gegen das SDK einer anderen DriveLab-Version gebaut – neu bauen</td></tr>
+      <tr><td class="mono">Steuergeraet '...' nicht in ...</td><td>Der Name unter <code>params.ecu</code> passt nicht.</td></tr>
+      <tr><td class="mono">Nicht aufloesbar: … nicht in der DBC</td><td>Tippfehler im Signalnamen, oder das Signal fehlt in der DBC.</td></tr>
+      <tr><td class="mono">Nicht aufloesbar: … wird bereits von … gesendet</td><td>Zwei Steuergeräte senden dieselbe Botschaft. Eines ersetzen, nicht ergänzen.</td></tr>
+      <tr><td class="mono">Zykluszeit ist kein Vielfaches von base_dt</td><td><code>period_ms</code> oder <code>offset_ms</code> passt nicht zum Grundtakt.</td></tr>
+      <tr><td class="mono">'ecus' gehoert nicht in die config.json</td><td>Das Netz gehört in die Fahrzeugdatei unter <code>components.ecus</code>.</td></tr>
+      <tr><td>DLL lässt sich nicht überschreiben</td><td>DriveLab läuft noch und hat sie geladen.</td></tr>
+    </tbody>
+  </table></div>
+  <p><code>drivelab validate</code> baut das Netz auf, ohne zu simulieren – der schnellste Weg zu diesen Meldungen.</p>
+  <h3 class="sub">Grenzen dieser Version</h3>
+  <ul class="list">
+    <li><strong>Ein Absturz im Steuergerät beendet DriveLab</strong> – die Bibliothek läuft im selben Prozess.</li>
+    <li>Am Fahrzeug kommen normierte Stellgrößen an (Gas, Bremse, Lenkung); ein Moment je Rad geht noch nicht.</li>
+    <li>Ein CAN-Bus; mehrere Busse oder andere Bussysteme gibt es noch nicht.</li>
+    <li>Pfade mit Zeichen außerhalb der Windows-Codepage werden nicht überall unterstützt.</li>
+    <li>Das Preset <code>msvc</code> ist weniger erprobt als <code>mingw</code>.</li>
+  </ul>
+</section>
+
+</div></main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

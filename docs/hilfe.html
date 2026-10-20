@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fehlerbehebung · DriveLab</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="hilfe.html" data-root="" data-track="user">
+<div class="shell">
+<aside class="side" id="side"></aside>
+<main class="main"><div class="page">
+
+<header class="page-head">
+  <span class="k">Anwender · 9</span>
+  <h1>Fehlerbehebung</h1>
+  <p class="lede">Die häufigsten Meldungen und was dahinter steckt. <code>drivelab validate</code> findet die meisten davon, ohne einen Lauf zu starten.</p>
+</header>
+<section class="chap" id="installation">
+  <div class="chap-head"><h2>Installation und Start</h2></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Symptom</th><th>Ursache</th><th>Abhilfe</th></tr></thead>
+    <tbody>
+      <tr><td><code>drivelab</code> wird nicht gefunden</td><td>Der <code>PATH</code> gilt erst in neuen Terminals.</td><td>Neues Terminal öffnen.</td></tr>
+      <tr><td>Nach einem Update läuft die alte Version</td><td>Eine ältere Installation an anderem Ort steht noch im <code>PATH</code>.</td><td><code>where drivelab</code> zeigt alle; die alte über „Apps &amp; Features“ entfernen.</td></tr>
+      <tr><td>Lizenzfehler</td><td><span class="file">license.lic</span> fehlt, ist abgelaufen oder beschädigt.</td><td><code>drivelab license</code> zeigt Status und gelesene Datei; die Datei gehört in den Arbeitsordner.</td></tr>
+      <tr><td>Projekt wird nicht gefunden</td><td>Ein bloßer Name wird im Arbeitsordner gesucht.</td><td><code>drivelab version</code> zeigt den Arbeitsordner; sonst den Pfad angeben.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="chap" id="aufbau">
+  <div class="chap-head"><h2>Aufbau des Laufs</h2></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Meldung (Auszug)</th><th>Ursache</th><th>Abhilfe</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">… nicht gefunden: &lt;Pfad&gt;</td><td>Ein relativer Pfad in einer JSON-Datei zeigt ins Leere.</td><td>Pfade gelten relativ zur <em>jeweiligen</em> Datei, <a href="projekt.html#aufbau">→ Pfad-Regel</a>.</td></tr>
+      <tr><td class="mono">Unbekannter Reifentyp … (bekannt: …)</td><td>Tippfehler im Feld <code>type</code> (ebenso Motor-, Bremsentyp …)</td><td>Die Meldung listet die gültigen Typen.</td></tr>
+      <tr><td class="mono">Zweispurmodell braucht 4 Reifen und 4 Motoren</td><td>Komponentenlisten passen nicht zum <code>simulation_approach</code></td><td><a href="fahrzeug.html#fahrzeug">→ Fahrzeugdatei</a></td></tr>
+      <tr><td class="mono">Aerodynamik fehlt in …</td><td>weder <code>components.aero</code> noch <code>cwA</code>/<code>clA</code></td><td><a href="fahrzeug.html#aero">→ Aerodynamik</a></td></tr>
+      <tr><td class="mono">'ecus' gehoert nicht in die config.json</td><td>Steuergeräte-Netz am falschen Ort</td><td>in die Fahrzeugdatei unter <code>components.ecus</code></td></tr>
+      <tr><td class="mono">Keine Route ab Road … gefunden</td><td>Start- oder Ziel-ID falsch, oder keine Verbindung</td><td>IDs prüfen; <code>diagnose_route</code> in Python zeigt die Lücke</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Meldungen der Steuergeräte: <a href="steuergeraete.html#fehler">→ Steuergeräte, Fehlersuche</a>.</p>
+</section>
+
+<section class="chap" id="lauf">
+  <div class="chap-head"><h2>Während des Laufs</h2></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Symptom</th><th>Ursache</th><th>Abhilfe</th></tr></thead>
+    <tbody>
+      <tr><td>Lauf endet sofort</td><td>Die Startpose liegt neben der Strecke: <code>offRoad</code></td><td><code>start</code> und Breite der Strecke prüfen</td></tr>
+      <tr><td>Lauf endet früher als <code>t_end</code></td><td>Fahrzeug hat die Strecke verlassen oder das Routenende erreicht</td><td>Letzte Zeilen in <span class="file">road.tsv</span>: <code>offRoad</code> und <code>s</code></td></tr>
+      <tr><td>Fahrzeug fährt nicht los</td><td>Mit Steuergeräte-Netz: ein Steuergerät gibt kein Gas, z. B. wegen Timeout</td><td><span class="file">ecu_faults.tsv</span> und den Bus-Teil im Report ansehen</td></tr>
+      <tr><td><code>import drivelab</code> schlägt fehl</td><td>falsche Python-Version oder DLL-Pfad fehlt</td><td><a href="python.html#einrichtung">→ Python, Einrichtung</a></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+</div></main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

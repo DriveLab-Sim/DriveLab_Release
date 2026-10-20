@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Strecke, Fahrer, Sensoren · DriveLab</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="umgebung.html" data-root="" data-track="user">
+<div class="shell">
+<aside class="side" id="side"></aside>
+<main class="main"><div class="page">
+
+<header class="page-head">
+  <span class="k">Anwender · 4</span>
+  <h1>Strecke, Fahrer, Sensoren</h1>
+  <p class="lede">Alles, was nicht zum Fahrzeug gehört: worauf es fährt, wer es fährt und was es misst.</p>
+</header>
+<section class="chap" id="strecken">
+  <div class="chap-head"><h2>Strecken</h2></div>
+  <p>Die Endung entscheidet: <code>.xodr</code> wird als OpenDRIVE gelesen, alles andere als DriveLab-JSON. Das JSON kennt zwei Formen:</p>
+  <ul class="list">
+    <li><strong>Einzelstrecke</strong> – <code>start</code>, <code>default_width</code> und eine Liste <code>segments</code>. Schließt die Geometrie auf den Startpunkt, ist es ein Rundkurs: <code>s</code> läuft dann periodisch weiter.</li>
+    <li><strong>Netz</strong> – <code>{"roads": [...], "junctions": [...]}</code> mit IDs, Verknüpfungen und Spuren. Ohne <code>route</code> fährt das Fahrzeug auf der ersten Straße.</li>
+  </ul>
+  <div class="code"><span class="lbl">JSON · Einzelstrecke</span><pre>{
+  <span class="s">"format"</span>: <span class="s">"drivelab-track"</span>, <span class="s">"version"</span>: <span class="n">1</span>,
+  <span class="s">"start"</span>: { <span class="s">"x"</span>: <span class="n">0.0</span>, <span class="s">"y"</span>: <span class="n">0.0</span>, <span class="s">"hdg"</span>: <span class="n">0.0</span> },
+  <span class="s">"default_width"</span>: <span class="n">7.0</span>,
+  <span class="s">"segments"</span>: [
+    { <span class="s">"type"</span>: <span class="s">"line"</span>,   <span class="s">"length"</span>: <span class="n">100.0</span> },
+    { <span class="s">"type"</span>: <span class="s">"spiral"</span>, <span class="s">"length"</span>: <span class="n">30.0</span>, <span class="s">"curv_end"</span>: <span class="n">0.02</span> },
+    { <span class="s">"type"</span>: <span class="s">"arc"</span>,    <span class="s">"length"</span>: <span class="n">80.0</span>, <span class="s">"curvature"</span>: <span class="n">0.02</span> }
+  ]
+}</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Segment</th><th>Parameter</th><th>Geometrie</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">line</td><td class="mono">length</td><td>Gerade</td></tr>
+      <tr><td class="mono">arc</td><td class="mono">length · curvature</td><td>Kreisbogen, Krümmung &gt; 0 = Linkskurve</td></tr>
+      <tr><td class="mono">spiral</td><td class="mono">length · curv_end (· curv_start)</td><td>Klothoide, Krümmung ändert sich linear</td></tr>
+      <tr><td class="mono">poly3</td><td class="mono">length · a · b · c · d</td><td>kubisches Polynom</td></tr>
+      <tr><td class="mono">paramPoly3</td><td class="mono">length · aU…dU · aV…dV · pRange</td><td>parametrisches Polynom, <code>pRange</code> = <code>"normalized"</code> oder <code>"arcLength"</code></td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Je Segment darf <code>width</code> die Standardbreite überschreiben. Die Vorlage bringt <span class="file">Testfeld.json</span> (lange Gerade, 1 km breit), <span class="file">einfacher_Rundkurs.json</span> und <span class="file">TestLoop.xodr</span> mit.</p>
+  <details class="fold"><summary>OpenDRIVE: was gelesen wird und was nicht</summary><div class="fold-body">
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Gelesen (2D)</th><th>Noch nicht</th></tr></thead>
+    <tbody><tr>
+      <td>alle Geometrietypen, Straßenverknüpfungen, Spurabschnitte, Spurtypen und -breiten (<code>width</code>, <code>border</code>, <code>laneOffset</code>), Kreuzungen mit <code>laneLink</code></td>
+      <td>Höhenprofil und Querneigung, Markierungen, Objekte und Schilder, Verkehrsregeln</td>
+    </tr></tbody>
+  </table></div>
+  </div></details>
+</section>
+
+<section class="chap" id="route">
+  <div class="chap-head"><h2>Route durch ein Netz</h2></div>
+  <p>Optionaler Block <code>route</code> in der <code>config.json</code>. Drei Arten, sie anzugeben:</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Angabe</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">"from", "to" (, "via")</td><td>Route automatisch suchen, Kreuzungen findet die Suche selbst</td></tr>
+      <tr><td class="mono">"roads": [...]</td><td>feste Folge von Straßen-IDs; Verbindungsstraßen in Kreuzungen werden ergänzt</td></tr>
+      <tr><td class="mono">"start_road"</td><td>ab dieser Straße den Verknüpfungen folgen</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><span class="lbl">JSON · in config.json</span><pre><span class="s">"route"</span>: { <span class="s">"from"</span>: <span class="s">"1"</span>, <span class="s">"to"</span>: <span class="s">"7"</span>, <span class="s">"lane"</span>: <span class="n">0</span> }</pre></div>
+  <p class="tight"><code>lane: 0</code> ist die innerste Fahrspur in Fahrtrichtung (Rechtsverkehr, <code>left_hand_traffic</code> kehrt das um).
+  Findet die Prüfung Lücken in der Spurführung, stehen Warnungen im <span class="file">run.log</span>. In Python zeigt <code>diagnose_route</code> die Stelle.</p>
+</section>
+
+<section class="chap" id="fahrer">
+  <div class="chap-head"><h2>Fahrer</h2></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>type</th><th>Verhalten</th><th>params</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">"scripted"</td><td>Zeitskript aus Phasen: ab <code>t</code> gelten die Werte, bis die nächste Phase beginnt</td><td class="mono">phases[ {t, gas, bremse, lenkwinkel} ]</td></tr>
+      <tr><td class="mono">"path"</td><td>Bahnfolgeregler: hält die Mitte (Querabweichung, Kurswinkel, Krümmung vorausschauend) und passt das Tempo den Kurven an</td><td class="mono">k_y · k_psi · wheelbase · v_max · a_lat_max · a_brake_plan · kp_speed · steer_max (Radlenkwinkel; mit Lenksystem rechnet der Regler selbst auf den Lenkradwinkel um, <a href="fahrzeug.html#lenkung">→ Lenkung</a>)</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><span class="lbl">JSON · data/driver/scripted.json</span><pre>{ <span class="s">"type"</span>: <span class="s">"scripted"</span>,
+  <span class="s">"params"</span>: { <span class="s">"phases"</span>: [
+    { <span class="s">"t"</span>: <span class="n">0.0</span>,   <span class="s">"gas"</span>: <span class="n">1.0</span>, <span class="s">"bremse"</span>: <span class="n">0.0</span>, <span class="s">"lenkwinkel"</span>: <span class="n">0.0</span> },
+    { <span class="s">"t"</span>: <span class="n">100.0</span>, <span class="s">"gas"</span>: <span class="n">0.0</span>, <span class="s">"bremse"</span>: <span class="n">1.0</span>, <span class="s">"lenkwinkel"</span>: <span class="n">0.0</span> } ] } }</pre></div>
+  <p class="tight">Gas und Bremse 0…1, Lenkwinkel in rad am Rad, + = links. Ein eigener Fahrer entsteht in Python, <a href="python.html">→ Python</a>.</p>
+</section>
+
+<section class="chap" id="sensoren">
+  <div class="chap-head"><h2>Sensoren</h2></div>
+  <p>Unter <code>"sensors"</code> stehen <code>pov</code> und <code>imu</code>. Jeder hat <code>enabled</code>, eine eigene Abtastrate
+  und eine Einbaulage <code>mount</code> (<code>x_m, y_m, z_m</code>, <code>roll_rad, pitch_rad, yaw_rad</code>) relativ zum Fahrzeug.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Sensor</th><th>liefert</th><th>Parameter</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">pov</td><td>Streckenvorschau: Mitte und Ränder als Punkte im Sensor-Koordinatensystem, je Punkt Kurs, Krümmung, Breite</td><td class="mono">rate_hz · look_ahead_m · sample_distance_m</td></tr>
+      <tr><td class="mono">imu</td><td>Beschleunigung (ohne Erdbeschleunigung) und Drehrate im Sensorsystem, ideal ohne Rauschen</td><td class="mono">rate_hz</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Zwischen zwei Messungen bleibt der letzte Wert stehen; der Zeitstempel zeigt, wann er entstand. Im Lauf landen die Werte in <span class="file">sensors.tsv</span>.</p>
+</section>
+
+</div></main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

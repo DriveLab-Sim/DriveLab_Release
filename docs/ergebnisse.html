@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ergebnisse & Reports · DriveLab</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="ergebnisse.html" data-root="" data-track="user">
+<div class="shell">
+<aside class="side" id="side"></aside>
+<main class="main"><div class="page">
+
+<header class="page-head">
+  <span class="k">Anwender · 6</span>
+  <h1>Ergebnisse & Reports</h1>
+  <p class="lede">Jeder Lauf bekommt einen eigenen Ordner mit Text-Tabellen. Der Report fasst sie als HTML-Seite zusammen.</p>
+</header>
+<section class="chap" id="lauf">
+  <div class="chap-head"><h2>Ein Laufordner</h2></div>
+<div class="tree">results/run_001/
+├── <b>manifest.json</b>   <i>was gerechnet wurde: Eingabedateien, Modell, sim-Werte</i>
+├── <b>run.log</b>         <i>Protokoll, Warnungen, Fehlerspeicher-Einträge</i>
+├── states.tsv      <i>Zustände des Fahrzeugmodells, eine Zeile je dt</i>
+├── outputs.tsv     <i>zusätzliche Ausgänge des Modells (Momente, Motordrehzahlen, …)</i>
+├── <b>channels.tsv</b>    <i>Standardkanäle mit festen Namen, gleich für alle Modelle</i>
+├── channels.json   <i>Einheiten und Radpositionen zu channels.tsv</i>
+├── <b>summary.json</b>    <i>Kennwerte und kritische Zustände – nach drivelab run</i>
+├── road.tsv        <i>Lage zur Straße: s, e_y, e_psi, Randabstände, offRoad</i>
+├── sensors.tsv     <i>IMU und POV</i>
+├── track.csv       <i>Streckengeometrie, alle 0,5 m</i>
+├── can.tsv         <i>Bus-Mitschnitt – nur mit Steuergeräte-Netz</i>
+├── ecu_faults.tsv  <i>Fehlerspeicher – nur wenn es Einträge gibt</i>
+└── report.html     <i>nach drivelab report --html</i></div>
+  <p>Die <code>.tsv</code>-Dateien sind tabulatorgetrennt mit Kopfzeile; <span class="file">track.csv</span> ist kommagetrennt.
+  Alle lassen sich direkt in Excel, pandas oder MATLAB lesen.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Datei</th><th>Spalten</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">states.tsv</td><td><code>t</code> und die Zustände des Modells. Die Namen hängen vom Modell ab: Einspur <code>xdot, ydot, …</code>, Zweispur/MKS <code>v_x_body, v_y_body, …</code></td></tr>
+      <tr><td class="mono">outputs.tsv</td><td><code>t, M_A_v, M_A_h, omega_motor_v, omega_motor_h</code>; das MKS schreibt zusätzlich Radkräfte, Sturz, Einfederung, Bauteilkräfte</td></tr>
+      <tr><td class="mono">channels.tsv</td><td>Standardkanäle, siehe <a href="#kanaele">unten</a>. Fehlt einem Modell eine Größe, fehlt die Spalte; ein leeres Feld heißt „kein Wert“</td></tr>
+      <tr><td class="mono">summary.json</td><td><code>kpis</code> (Wert, Einheit, Bezeichnung) und <code>critical_states</code> (Zustand, Rad, Start, Dauer, Spitzenwert)</td></tr>
+      <tr><td class="mono">road.tsv</td><td class="mono">t, s, e_y, e_psi, distLeft, distRight, offRoad</td></tr>
+      <tr><td class="mono">sensors.tsv</td><td class="mono">t, imu_valid, imu_ax … imu_gz, pov_valid, pov_n, pov_center_x, pov_center_y, pov_heading, pov_curvature, pov_width</td></tr>
+      <tr><td class="mono">track.csv</td><td class="mono">s, cx, cy, lx, ly, rx, ry</td></tr>
+      <tr><td class="mono">can.tsv</td><td><code>t, id, message</code> und je DBC-Signal eine Spalte: eine Zeile je empfangener Botschaft, mit dem Stand aller Signale danach. Signale, die noch nie ankamen, sind leer.</td></tr>
+      <tr><td class="mono">ecu_faults.tsv</td><td><code>ecu, code, severity, count, first_t, last_t, text</code> – ein Eintrag je Steuergerät und Fehlercode</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="chap" id="kanaele">
+  <div class="chap-head"><h2>Standardkanäle</h2></div>
+  <p>In <span class="file">channels.tsv</span> heißen die Größen in jedem Modell gleich. Auswertungen und eigene Skripte müssen so nicht wissen,
+  welches Modell gerechnet hat. Radgrößen tragen die Position als Endung: <code>_FL</code>, <code>_FR</code>, <code>_RL</code>, <code>_RR</code>;
+  das Einspurmodell hat <code>_F</code> und <code>_R</code> je Achse. SI-Einheiten, Winkel in rad.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Kanal</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">t · s</td><td>s · m</td><td>Zeit, Position auf der Strecke</td></tr>
+      <tr><td class="mono">x · y · psi</td><td>m · rad</td><td>Weltlage und Gierwinkel</td></tr>
+      <tr><td class="mono">v · vx · vy</td><td>m/s</td><td>Geschwindigkeit, Längs- und Quergeschwindigkeit im Fahrzeugsystem</td></tr>
+      <tr><td class="mono">ax · ay</td><td>m/s²</td><td>Beschleunigung im Fahrzeugsystem (wie ein idealer Beschleunigungssensor ohne Schwerkraft)</td></tr>
+      <tr><td class="mono">yaw_rate · beta · roll · pitch</td><td>rad/s · rad</td><td>Gierrate, Schwimmwinkel (unter 1 m/s: 0), Wank- und Nickwinkel</td></tr>
+      <tr><td class="mono">steer · throttle · brake</td><td>rad · – · –</td><td>was am Fahrzeug ankommt, also nach den Steuergeräten. <code>steer</code> ist der Lenkradwinkel; ohne Lenksystem gleich dem Radlenkwinkel</td></tr>
+      <tr><td class="mono">steer_road</td><td>rad</td><td>Referenz-Radlenkwinkel vorne nach der Lenkung (Mittel links/rechts bei Hub 0)</td></tr>
+      <tr><td class="mono">soc · v_batt · i_batt · p_batt · p_batt_max · e_batt</td><td>– · V · A · W · W · Wh</td><td>nur mit HV-Akku: Ladezustand, Klemmenspannung, Strom, Leistung (+ = Entladen), verfügbare Entladeleistung, seit Start entnommene Energie</td></tr>
+      <tr><td class="mono">F_drag · F_down · F_down_f</td><td>N</td><td>Luftwiderstand, Abtrieb (+ = drückt), davon auf der Vorderachse</td></tr>
+      <tr><td class="mono">steer_torque</td><td>Nm</td><td>Haltemoment am Lenkrad, + = der Fahrer hält nach links; ohne Lenksystem bei Übersetzung 1</td></tr>
+      <tr><td class="mono">Fx_* · Fy_* · Fz_*</td><td>N</td><td>Reifenkräfte im Radsystem</td></tr>
+      <tr><td class="mono">Mz_*</td><td>Nm</td><td>Rückstellmoment des Reifens um die Hochachse (+ = um +z); wirkt auf das Giermoment und die Lenkung. Beim linearen Reifen 0</td></tr>
+      <tr><td class="mono">Fx_max_* · Fy_max_*</td><td>N</td><td>Kraftpotenzial des Reifens bei der aktuellen Radlast (Magic Formula: D<sub>x</sub>, D<sub>y</sub>); fehlt beim linearen Reifen</td></tr>
+      <tr><td class="mono">alpha_* · kappa_* · camber_*</td><td>rad · – · rad</td><td>Schräglaufwinkel, Längsschlupf, Sturz (positiv = Radoberkante außen)</td></tr>
+      <tr><td class="mono">toe_* · steer_*</td><td>rad</td><td>Vorspur je Rad; Radlenkwinkel inklusive Spur und Ackermann (positiv = nach links)</tr>
+      <tr><td class="mono">omega_*</td><td>rad/s</td><td>Raddrehzahl</td></tr>
+      <tr><td class="mono">T_drive_* · T_drive_max_*</td><td>Nm</td><td>Antriebsmoment am Rad und verfügbares Moment bei dieser Drehzahl</td></tr>
+      <tr><td class="mono">drive_limit_*</td><td>–</td><td>was das verfügbare Moment begrenzt: 1 Moment, 2 Leistung, 3 Drehzahl, 4 Akku, 0 unbekannt</td></tr>
+      <tr><td class="mono">P_el_*</td><td>W</td><td>Leistung aus dem HV-Kreis je Motor (mechanisch / Wirkungsgrad)</td></tr>
+      <tr><td class="mono">n_motor_*</td><td>1/min</td><td>Motordrehzahl (Rad · Getriebe)</td></tr>
+      <tr><td class="mono">i_q_* · i_d_*</td><td>A</td><td>Strangströme effektiv, nur bei <code>PmsmDrive</code>; i_d &lt; 0 = Feldschwächung</td></tr>
+      <tr><td class="mono">T_brake_*</td><td>Nm</td><td>Bremsmoment (Betrag)</td></tr>
+      <tr><td class="mono">susp_travel_* · susp_vel_*</td><td>m · m/s</td><td>Einfederweg und -geschwindigkeit, positiv = einfedern (nicht im Einspurmodell)</td></tr>
+      <tr><td class="mono">F_jack_*</td><td>N</td><td>Vertikalkraft über die Lenker auf den Aufbau (Wankzentrum, Anti-Geometrie), nur MKS</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><span class="lbl">Python</span><pre><span class="k">import</span> pandas <span class="k">as</span> pd
+ch = pd.read_csv(<span class="s">"results/run_001/channels.tsv"</span>, sep=<span class="s">"\t"</span>)
+util_FL = ((ch.Fx_FL / ch.Fx_max_FL)**<span class="n">2</span> + (ch.Fy_FL / ch.Fy_max_FL)**<span class="n">2</span>)**<span class="n">0.5</span></pre></div>
+</section>
+
+<section class="chap" id="report">
+  <div class="chap-head"><h2>Lauf-Report</h2></div>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>drivelab report MeinProjekt --open          <span class="c">rem neuester Lauf</span>
+drivelab report results\run_003 --open     <span class="c">rem ein bestimmter Lauf</span></pre></div>
+  <p>Der Report ist eine einzelne HTML-Datei ohne externe Abhängigkeiten – sie lässt sich weitergeben. Aus <span class="file">channels.tsv</span> entstehen:</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Abschnitt</th><th>Inhalt</th></tr></thead>
+    <tbody>
+      <tr><td>Run summary</td><td>Kennwerte (max. Geschwindigkeit, Quer-, Brems- und Längsbeschleunigung in g, Reifenausnutzung je Achse, Zeit am Reifenlimit, Energie am Rad) und die Tabelle der kritischen Zustände</td></tr>
+      <tr><td>Tire utilization</td><td>Ausnutzung <code>√((Fx/Fx,max)² + (Fy/Fy,max)²)</code> je Rad über der Zeit und als Farbe auf der Strecke, Reibkreise je Rad, Tabelle je Rad</td></tr>
+      <tr><td>Wheel loads</td><td>Radlasten, Querlastverschiebung je Achse (links − rechts), statischer Vorderachsanteil</td></tr>
+      <tr><td>HV battery</td><td>nur mit Akku: Akkuenergie, Wh/km, SoC Start/Ende, minimale Spannung, maximale Leistung; SoC über der Strecke, Leistung mit verfügbarer Leistung, Spannung, Strom. Kritischer Zustand „Battery limited“. Tabelle „Checks“ mit OK/FAIL: Energie- und Ladungsbilanz, Zellspannung, Zellstrom, Leistungsgrenzen, Σ P_el = p_batt; Anzahl Fehler in <code>summary.json</code> als <code>battery_checks_failed</code></td></tr>
+      <tr><td>GG diagram</td><td>ax über ay in g, eingefärbt nach Geschwindigkeit</td></tr>
+      <tr><td>Channels</td><td>interaktiver Plotter: Kanäle je Diagramm wählen, x-Achse Zeit oder Strecke, Cursor und Zoom (ziehen, Doppelklick zurück) gelten für alle Diagramme</td></tr>
+    </tbody>
+  </table></div>
+  <p>Kritische Zustände: Reifenausnutzung über 95 %, |Längsschlupf| über 15 %, Radlast unter 5 % ihres Medians (Rad hebt ab), Antrieb an der Leistungsgrenze.
+  Reifen- und Schlupfzustände zählen erst ab 1 m/s; kürzere Ereignisse als 0,05 s entfallen.</p>
+  <p>Danach folgen wie bisher Fahrweg, Geschwindigkeit, Beschleunigung und Querabweichung und, wenn das Fahrzeug Steuergeräte hat, der Teil zum Bus:
+  Botschaften und ihre Takte, Signalverläufe und den Fehlerspeicher. Läufe vor 0.2.1 haben keine <span class="file">channels.tsv</span>; ihr Report zeigt nur diesen Teil.</p>
+</section>
+
+<section class="chap" id="assess">
+  <div class="chap-head"><h2>Fahrzeugbewertung</h2></div>
+  <p><code>inspect vehicle</code> zeigt, was im Fahrzeug steckt. <code>assess</code> zeigt, wie es fährt: Standardmanöver auf einer ebenen, unbegrenzten Fläche,
+  ausgewertet zu den üblichen Kennwerten der Fahrdynamik-Objektivierung.</p>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>drivelab assess MeinProjekt --open</pre></div>
+  <p>Die Manöver stehen in einer eigenen Datei, auf die die <span class="file">config.json</span> zeigt. Fehlt der Eintrag, gilt der mitgelieferte Standardsatz.</p>
+  <div class="code"><span class="lbl">config.json</span><pre>"assessment": "./data/assessment/standard.json"</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>type</th><th>Manöver</th><th>Parameter</th><th>Kennwerte</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">steer_ramp</td><td>Kreisfahrt, konstante Geschwindigkeit, langsame Lenkwinkelrampe (ISO 4138)</td><td class="mono">v_kmh, ay_rate_mps3</td><td>Eigenlenkgradient, charakteristische bzw. kritische Geschwindigkeit, max. ay, Schwimmwinkel- und Wankgradient, Gierverstärkung; mit Lenksystem wirksame Lenkübersetzung, Lenkradwinkelgradient, Lenkempfindlichkeit und Lenkmomentgradient</td></tr>
+      <tr><td class="mono">constant_steer</td><td>Kreisfahrt, fester Lenkwinkel, langsam schneller (ISO 4138)</td><td class="mono">radius_m oder steer_deg, v_start_kmh, v_end_kmh, accel_mps2</td><td>wie oben, zusätzlich Radius über Geschwindigkeit</td></tr>
+      <tr><td class="mono">step_steer</td><td>Lenkwinkelsprung (ISO 7401)</td><td class="mono">v_kmh, ay_mps2 oder steer_deg, rise_time_s, hold_s</td><td>Ansprechzeit (90 %) und Spitzenzeit von Gierrate und ay, Überschwingen, stationäre Gierverstärkung, TB-Wert</td></tr>
+      <tr><td class="mono">frequency_response</td><td>Sinus-Gleitsweep mit kleiner Amplitude (ISO 7401)</td><td class="mono">v_kmh, ay_mps2 oder steer_deg, f_min_hz, f_max_hz, duration_s</td><td>Amplituden- und Phasengang von Gierrate und ay, Phase und Verzug bei 1 Hz, Überhöhung, Bandbreite (−45°)</td></tr>
+    </tbody>
+  </table></div>
+  <p>Jedes Manöver kann ein <code>id</code> bekommen (Ordner- und Seitenname), dasselbe Manöver mehrfach mit anderen Werten ist so möglich.
+  <code>linear_ay_mps2</code> (Standard 4) begrenzt den linearen Bereich, in dem die Gradienten bestimmt werden.</p>
+  <p>Wie gefahren wird: Lenkwinkel nach Vorgabe, die Geschwindigkeit hält ein PI-Regler über Gas und Bremse. Steuergeräte sind nicht angeschlossen – bewertet wird
+  das passive Fahrzeug. <code>steer_deg</code> ist ein Lenkradwinkel. Die Fahrzeugkennwerte (Eigenlenkgradient, Gierverstärkung, Frequenzgang) beziehen sich auf den
+  Radlenkwinkel <code>steer_road</code> und sind damit unabhängig von der Lenkübersetzung; die Lenkradkennwerte kommen nur mit Lenksystem dazu.
+  Wo ein Manöver eine Querbeschleunigung statt eines Lenkwinkels vorgibt, sucht DriveLab den passenden Lenkwinkel vorher in kurzen stationären Kreisfahrten.
+  Die Kreisfahrten enden, sobald die Querbeschleunigung in 2 s um weniger als 1 % steigt; jeder Lauf endet bei |β| &gt; 30°.</p>
+<div class="tree">assessments/assess_001/
+├── <b>index.html</b>            <i>Übersicht: Kennwerte aller Manöver, Prüfbedingungen</i>
+├── vehicle.html          <i>Datenblatt wie inspect vehicle</i>
+├── steer_ramp.html       <i>je Manöver eine Seite mit Diagrammen und Kanal-Plotter</i>
+├── …
+├── operating_points.html <i>Achskennlinien, Radlasten und Sturz aus der ersten Kreisfahrt</i>
+├── <b>assessment.json</b>       <i>alle Kennwerte maschinenlesbar</i>
+└── steer_ramp/ …         <i>je Manöver ein Laufordner mit channels.tsv</i></div>
+  <p class="tight">Die Kennwerte sind nur so gut wie das Modell: Einspur- und Zweispurmodell haben keine Achskinematik, das Einspurmodell rollt nicht.
+  Konstanter Lenkwinkel und Lenkwinkelrampe liefern leicht verschiedene Eigenlenkgradienten, weil beim Beschleunigen Längskräfte mitwirken.</p>
+</section>
+
+<section class="chap" id="komponenten">
+  <div class="chap-head"><h2>Komponenten-Reports</h2></div>
+  <p><code>drivelab inspect</code> rechnet eine Komponente für sich durch, ohne Fahrzeug und ohne Lauf. Heraus kommen eine
+  <span class="file">report.html</span> und je Diagramm eine CSV-Datei mit denselben Werten.</p>
+  <div class="pipe">
+    <div class="step"><span class="k">ändern</span><span class="v">Parameter in der Komponentendatei</span></div>
+    <div class="arr">→</div>
+    <div class="step"><span class="k">prüfen</span><span class="v"><code>drivelab inspect &lt;typ&gt; &lt;datei&gt; --open</code></span></div>
+    <div class="arr">→</div>
+    <div class="step"><span class="k">einbauen</span><span class="v">Fahrzeug-Report: <code>inspect vehicle</code></span></div>
+    <div class="arr">→</div>
+    <div class="step"><span class="k">fahren</span><span class="v"><code>drivelab run</code> und Lauf-Report</span></div>
+  </div>
+  <p class="tight">Der Fahrzeug-Report sammelt die Reports aller Komponenten und des Steuergeräte-Netzes auf einer Seite. Was er zeigt, hängt davon ab,
+  welche Komponenten das Fahrzeug hat – ein Einspurmodell hat keine Kinematik, also auch keinen Kinematik-Teil.
+  Typen und Befehle: <a href="cli.html#inspect">→ Kommandozeile</a>.</p>
+</section>
+
+</div></main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

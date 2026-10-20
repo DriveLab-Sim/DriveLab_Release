@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Erste Schritte · DriveLab</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="erste-schritte.html" data-root="" data-track="user">
+<div class="shell">
+<aside class="side" id="side"></aside>
+<main class="main"><div class="page">
+
+<header class="page-head">
+  <span class="k">Anwender · 1</span>
+  <h1>Erste Schritte</h1>
+  <p class="lede">Vom installierten Programm zum ersten Report in fünf Befehlen.</p>
+</header>
+<section class="chap" id="installation">
+  <div class="chap-head"><h2>Installation prüfen</h2></div>
+  <div class="note warn"><span class="t">Windows-Warnung beim Installieren</span>
+  Der Installer ist noch nicht signiert. SmartScreen zeigt deshalb „Der Computer wurde durch Windows geschützt“:
+  <strong>Weitere Informationen → Trotzdem ausführen</strong>. Adminrechte braucht die Installation nicht.</div>
+  <p>Der Installer trägt DriveLab in den Benutzer-<code>PATH</code> ein. In einem <em>neuen</em> Terminal:</p>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>drivelab version
+drivelab license
+drivelab docs          <span class="c">rem öffnet dieses Handbuch</span></pre></div>
+  <p><code>drivelab version</code> nennt die zwei Ordner, mit denen DriveLab arbeitet:</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Ordner</th><th>Ort</th><th>Inhalt</th></tr></thead>
+    <tbody>
+      <tr><td>Installation</td><td class="mono">%LOCALAPPDATA%\Programs\DriveLab</td><td>Programm, Vorlagen, SDK, dieses Handbuch, Beispiele. Wird bei jedem Update ersetzt – hier nichts ablegen.</td></tr>
+      <tr><td>Arbeitsordner</td><td class="mono">Dokumente\DriveLab</td><td>Deine Projekte (<code>projects</code>), deine Steuergeräte (<code>ecus</code>), die Lizenz. Bleibt bei Update und Deinstallation erhalten.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Beide sind im Startmenü verlinkt. Einen anderen Arbeitsordner legt die Umgebungsvariable <code>DRIVELAB_HOME</code> fest.</p>
+</section>
+
+<section class="chap" id="lizenz">
+  <div class="chap-head"><h2>Lizenz</h2></div>
+  <p>Ohne gültige Lizenz laufen nur <code>version</code>, <code>license</code>, <code>help</code> und <code>docs</code>.
+  Die Datei <span class="file">license.lic</span> gehört in den Arbeitsordner. Alternativ zeigt die
+  Umgebungsvariable <code>DRIVELAB_LICENSE</code> auf die Datei. <code>drivelab license</code> zeigt den Status
+  und, falls gefunden, welche Datei gelesen wurde.</p>
+</section>
+
+<section class="chap" id="projekt">
+  <div class="chap-head"><h2>Erstes Projekt</h2></div>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>drivelab new MeinProjekt
+drivelab validate MeinProjekt
+drivelab run MeinProjekt
+drivelab report MeinProjekt --open</pre></div>
+  <div class="pipe">
+    <div class="step"><span class="k">new</span><span class="v">kopiert die Vorlage nach <code>projects\MeinProjekt</code></span></div>
+    <div class="arr">→</div>
+    <div class="step"><span class="k">validate</span><span class="v">baut alles auf, ohne zu rechnen</span></div>
+    <div class="arr">→</div>
+    <div class="step"><span class="k">run</span><span class="v">rechnet, schreibt <code>results\run_001</code></span></div>
+    <div class="arr">→</div>
+    <div class="step"><span class="k">report</span><span class="v">HTML-Report im Browser</span></div>
+  </div>
+  <p>Ein bloßer Name meint immer <code>&lt;Arbeitsordner&gt;\projects\&lt;Name&gt;</code>. Mit einem Pfad
+  (<code>drivelab new C:\Sim\Test</code>) landet das Projekt woanders. Im Projektordner selbst reicht <code>.</code>:</p>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>cd %USERPROFILE%\Documents\DriveLab\projects\MeinProjekt
+drivelab run .</pre></div>
+</section>
+
+<section class="chap" id="weiter">
+  <div class="chap-head"><h2>Wie es weitergeht</h2></div>
+  <div class="tiles">
+    <a class="tile" href="projekt.html"><span class="k">Verstehen</span><h4>Was im Projekt steckt</h4><p>Ordner, <code>config.json</code>, Pfad-Regeln.</p></a>
+    <a class="tile" href="fahrzeug.html"><span class="k">Ändern</span><h4>Fahrzeug parametrieren</h4><p>Masse, Reifen, Motor, Bremse … und <code>drivelab inspect</code> zum Prüfen.</p></a>
+    <a class="tile" href="steuergeraete.html"><span class="k">Erweitern</span><h4>Eigenes Steuergerät</h4><p>Mit dem SDK in C++ oder C.</p></a>
+    <a class="tile" href="python.html"><span class="k">Skripten</span><h4>Aus Python fahren</h4><p>Eigener Fahrer, Sensoren live.</p></a>
+  </div>
+</section>
+
+</div></main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>
