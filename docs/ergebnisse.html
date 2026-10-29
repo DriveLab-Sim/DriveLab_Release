@@ -29,7 +29,7 @@
 ├── road.tsv        <i>Lage zur Straße: s, e_y, e_psi, Randabstände, offRoad</i>
 ├── sensors.tsv     <i>IMU und POV</i>
 ├── track.csv       <i>Streckengeometrie, alle 0,5 m</i>
-├── can.tsv         <i>Bus-Mitschnitt – nur mit Steuergeräte-Netz</i>
+├── can.tsv         <i>Bus-Mitschnitt – nur mit Steuergeräte-Netz; je Bus can_&lt;Bus&gt;.tsv</i>
 ├── ecu_faults.tsv  <i>Fehlerspeicher – nur wenn es Einträge gibt</i>
 └── report.html     <i>nach drivelab report --html</i></div>
   <p>Die <code>.tsv</code>-Dateien sind tabulatorgetrennt mit Kopfzeile; <span class="file">track.csv</span> ist kommagetrennt.
@@ -44,7 +44,8 @@
       <tr><td class="mono">road.tsv</td><td class="mono">t, s, e_y, e_psi, distLeft, distRight, offRoad</td></tr>
       <tr><td class="mono">sensors.tsv</td><td class="mono">t, imu_valid, imu_ax … imu_gz, pov_valid, pov_n, pov_center_x, pov_center_y, pov_heading, pov_curvature, pov_width</td></tr>
       <tr><td class="mono">track.csv</td><td class="mono">s, cx, cy, lx, ly, rx, ry</td></tr>
-      <tr><td class="mono">can.tsv</td><td><code>t, id, message</code> und je DBC-Signal eine Spalte: eine Zeile je empfangener Botschaft, mit dem Stand aller Signale danach. Signale, die noch nie ankamen, sind leer.</td></tr>
+      <tr><td class="mono">can.tsv</td><td><code>t, id, message</code> und je DBC-Signal eine Spalte: eine Zeile je empfangener Botschaft, mit dem Stand aller Signale danach. Signale, die noch nie ankamen, sind leer.
+      Mit mehreren Bussen eine Datei je Bus (<span class="file">can_PER.tsv</span>, …). Extended IDs stehen als <code>0x0cff0180x</code>, unbekannte Rohframes mit <code>message</code> = <code>?</code>.</td></tr>
       <tr><td class="mono">ecu_faults.tsv</td><td><code>ecu, code, severity, count, first_t, last_t, text</code> – ein Eintrag je Steuergerät und Fehlercode</td></tr>
     </tbody>
   </table></div>

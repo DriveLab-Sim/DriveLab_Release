@@ -14,7 +14,7 @@
 <header class="page-head">
   <span class="k">Anwender · 7</span>
   <h1>Steuergeräte (SDK)</h1>
-  <p class="lede">Ein Steuergerät ist eine eigene Bibliothek (<code>.dll</code>), die du außerhalb von DriveLab baust. DriveLab lädt sie zur Laufzeit, hängt sie an einen virtuellen CAN-Bus und ruft sie in ihrem Takt auf – DriveLab selbst wird nie neu übersetzt.</p>
+  <p class="lede">Ein Steuergerät ist eine eigene Bibliothek (<code>.dll</code>), die du außerhalb von DriveLab baust. DriveLab lädt sie zur Laufzeit, hängt sie an einen oder mehrere virtuelle CAN-Busse und ruft sie in ihrem Takt auf – DriveLab selbst wird nie neu übersetzt.</p>
 </header>
 <section class="chap" id="ueberblick">
   <div class="chap-head"><h2>Überblick</h2></div>
@@ -133,7 +133,7 @@ DRIVELAB_ECU(PedalMap, &quot;PedalMap&quot;);</pre></div>
       <tr><td class="mono">create</td><td>einmal beim Aufbau</td><td>Signalnamen auflösen, Parameter lesen – nur hier sind Strings erlaubt. Alles außer <code>DL_OK</code> bricht den Aufbau mit einer Meldung ab, die das Signal beim Namen nennt.</td></tr>
       <tr><td class="mono">reset</td><td>vor jedem Lauf</td><td>alle internen Zustände zurücksetzen, sonst startet der zweite Lauf mit den Werten vom Ende des ersten</td></tr>
       <tr><td class="mono">step</td><td>jeden Zyklus</td><td>der zyklische Task. <code>dt</code> ist die <em>eigene</em> Zykluszeit aus der <code>network.json</code>, nicht der Simulationsschritt.</td></tr>
-      <tr><td class="mono">onFrame</td><td>optional</td><td>sieht jeden Rohframe auf dem Bus – für Diagnose oder Gateways</td></tr>
+      <tr><td class="mono">onFrame</td><td>optional</td><td>sieht jeden Rohframe auf seinen Bussen – für Diagnose oder Gateways; <code>frame.bus</code> sagt, auf welchem</td></tr>
       <tr><td class="mono">DRIVELAB_ECU(Klasse, "Name")</td><td>einmal je Bibliothek</td><td>erzeugt alles, was DriveLab zum Laden braucht; am Dateiende</td></tr>
     </tbody>
   </table></div>
@@ -142,7 +142,7 @@ DRIVELAB_ECU(PedalMap, &quot;PedalMap&quot;);</pre></div>
 <section class="chap" id="signale">
   <div class="chap-head"><h2>Signale, Parameter, Fehlerspeicher</h2></div>
   <h3 class="sub">Signale</h3>
-  <p>Signale heißen <code>Botschaft.Signal</code>, wie in der DBC.</p>
+  <p>Signale heißen <code>Botschaft.Signal</code>, wie in der DBC. Bei mehreren Bussen gibt <code>Bus.Botschaft.Signal</code> den Bus an, siehe <a href="#busse">Mehrere Busse</a>.</p>
   <ul class="list">
     <li><strong><code>output</code> meldet an, dass dieses Steuergerät die ganze Botschaft sendet.</strong> Jede Botschaft hat genau einen Sender.</li>
     <li>Gibt es das Signal nicht, ist der Handle ungültig (<code>!in</code> ist wahr). Ob das ein Fehler ist, entscheidest du.</li>
@@ -217,9 +217,10 @@ uint32_t n = ctx.paramArray(&quot;kennlinie&quot;, map, 16);   // Zahlenliste</p
       <tr><td class="mono">dbc</td><td>Busbeschreibung, relativ zur <code>network.json</code></td></tr>
       <tr><td class="mono">messages</td><td>Zykluszeit je Botschaft in ms; fehlt eine, gilt der Takt ihres Senders</td></tr>
       <tr><td class="mono">plant.publish</td><td>was das Fahrzeug auf den Bus legt: Signal → Größe, optional mit <code>scale</code> und <code>offset</code></td></tr>
-      <tr><td class="mono">plant.subscribe</td><td>welche Signale beim Fahrzeug ankommen: <code>steer</code>, <code>throttle</code>, <code>brake</code>. Was fehlt, kommt direkt vom Fahrer.</td></tr>
+      <tr><td class="mono">plant.subscribe</td><td>welche Signale beim Fahrzeug ankommen: <code>steer</code>, <code>throttle</code>, <code>brake</code> und <code>torque_FL</code>, <code>torque_FR</code>, <code>torque_RL</code>, <code>torque_RR</code> (Motormoment je Rad in Nm, z. B. von einer VCU). Was fehlt, kommt direkt vom Fahrer; ein Rad ohne Moment fährt nach dem Gaspedal.</td></tr>
       <tr><td class="mono">ecus</td><td>die Steuergeräte; <code>params.library</code> relativ zur <code>network.json</code>, Endung darf fehlen</td></tr>
       <tr><td class="mono">trace · trace_file</td><td><code>false</code> schaltet den Mitschnitt ab · Dateiname, Vorgabe <code>can.tsv</code></td></tr>
+      <tr><td class="mono">bitrate_kbps</td><td>Bitrate für die Buslast im Report, Vorgabe 500</td></tr>
     </tbody>
   </table></div>
   <div class="tbl-wrap"><table>
@@ -233,6 +234,117 @@ uint32_t n = ctx.paramArray(&quot;kennlinie&quot;, map, 16);   // Zahlenliste</p
   </table></div>
   <p class="tight">Ein Eintrag darf in einer eigenen Datei stehen: <code>{ "name": "Powertrain", "config": "./Powertrain.json" }</code>; was zusätzlich im Eintrag steht, gewinnt.
   Stecken mehrere Steuergeräte in einer Bibliothek, wählt <code>"ecu": "&lt;Name&gt;"</code> in den <code>params</code> eines aus – welche es gibt, zeigt <code>drivelab ecu check</code>.</p>
+</section>
+
+<section class="chap" id="busse">
+  <div class="chap-head"><h2>Mehrere Busse</h2></div>
+  <p>Hat das Fahrzeug mehrere CAN-Busse, bekommt jeder einen Namen und seine eigene DBC. <code>dbc</code>, <code>messages</code>, <code>trace_file</code> und
+  <code>bitrate_kbps</code> stehen dann je Bus unter <code>buses</code> statt oben:</p>
+  <div class="code"><span class="lbl">JSON</span><pre>{
+  &quot;base_dt_ms&quot;: 1,
+
+  &quot;buses&quot;: {
+    &quot;PER&quot;: { &quot;dbc&quot;: &quot;./PER.dbc&quot;, &quot;bitrate_kbps&quot;: 1000,
+             &quot;messages&quot;: { &quot;DriverInputs&quot;: 10, &quot;TorqueRequest&quot;: 10 } },
+    &quot;INV&quot;: { &quot;dbc&quot;: &quot;./INV.dbc&quot;,
+             &quot;messages&quot;: { &quot;InvSetpoint&quot;: 5 } }
+  },
+
+  &quot;plant&quot;: {
+    &quot;period_ms&quot;: 5,
+    &quot;publish&quot;: {
+      &quot;DriverInputs.AcceleratorPedal&quot;: { &quot;quantity&quot;: &quot;driver:throttle&quot;, &quot;scale&quot;: 100.0 },
+      &quot;INV.InvActual.Speed&quot;:           &quot;vx&quot;
+    },
+    &quot;subscribe&quot;: { &quot;throttle&quot;: &quot;PER.ActuatorCommand.ThrottleCommand&quot; }
+  },
+
+  &quot;ecus&quot;: [
+    { &quot;name&quot;: &quot;Powertrain&quot;, &quot;type&quot;: &quot;native&quot;, &quot;period_ms&quot;: 10, &quot;buses&quot;: [&quot;PER&quot;],
+      &quot;params&quot;: { &quot;library&quot;: &quot;./bin/powertrain_ecu&quot; } },
+    { &quot;name&quot;: &quot;Gateway&quot;, &quot;type&quot;: &quot;native&quot;, &quot;period_ms&quot;: 5, &quot;buses&quot;: [&quot;PER&quot;, &quot;INV&quot;],
+      &quot;params&quot;: { &quot;library&quot;: &quot;./bin/gateway_ecu&quot; } }
+  ]
+}</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Eintrag</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">buses.&lt;Name&gt;.dbc</td><td>Busbeschreibung, Pflicht. Name aus Buchstaben, Ziffern, <code>_</code> und <code>-</code>.</td></tr>
+      <tr><td class="mono">buses.&lt;Name&gt;.messages</td><td>Zykluszeiten wie oben, nur für diesen Bus</td></tr>
+      <tr><td class="mono">buses.&lt;Name&gt;.trace_file</td><td>Mitschnitt, Vorgabe <code>can_&lt;Name&gt;.tsv</code></td></tr>
+      <tr><td class="mono">buses.&lt;Name&gt;.bitrate_kbps</td><td>Vorgabe 500; nur für die Buslast im Report</td></tr>
+      <tr><td class="mono">ecus[].buses</td><td>an welchen Bussen das Steuergerät hängt, Vorgabe alle. Die Reihenfolge ist der Index in <code>frame.bus</code>.</td></tr>
+    </tbody>
+  </table></div>
+  <h3 class="sub">Namen</h3>
+  <ul class="list">
+    <li><code>Bus.Botschaft.Signal</code> wählt den Bus. <code>Botschaft.Signal</code> reicht, solange der Name auf den Bussen des Steuergeräts nur einmal vorkommt – sonst bricht der Aufbau mit „mehrdeutig“ ab und nennt die Busse.</li>
+    <li>Ein Steuergerät sieht nur die Signale und Frames seiner Busse. Das Fahrzeug hängt an allen.</li>
+    <li>Dieselbe ID auf zwei Bussen ist kein Konflikt: Botschaften gehören je Bus einem Sender.</li>
+    <li>Extended IDs (29 bit) aus der DBC werden erkannt; <code>ecu list</code>, Report und Mitschnitt schreiben sie als <code>0x0CFF0180x</code>.</li>
+  </ul>
+  <h3 class="sub">Rohframes und Gateways</h3>
+  <p><code>ctx.bus("INV")</code> (C: <code>dl_bus(ctx, "INV")</code>) liefert den Index für <code>frame.bus</code>, <code>-1</code>, wenn der Bus nicht angeschlossen ist.
+  Ankommende Frames tragen denselben Index. Hängt das Steuergerät an nur einem Bus, wird <code>frame.bus</code> ignoriert.</p>
+  <div class="code"><span class="lbl">C++</span><pre>dl_status create(drivelab::Context&amp; ctx) override
+{
+    per_ = ctx.bus(&quot;PER&quot;);
+    inv_ = ctx.bus(&quot;INV&quot;);
+    return per_ &lt; 0 || inv_ &lt; 0 ? DL_ERROR : DL_OK;
+}
+
+void onFrame(drivelab::Context&amp; ctx, const dl_frame&amp; frame, float t) override
+{
+    if (frame.bus != inv_ || frame.id != 0x283) { return; }
+
+    dl_frame copy = frame;
+    copy.bus = static_cast&lt;uint8_t&gt;(per_);    // weiterleiten
+    ctx.sendFrame(copy);
+}</pre></div>
+  <p class="tight">Die Form mit <code>dbc</code> oben ist ein einzelner Bus ohne Namen und verhält sich wie bisher: <span class="file">can.tsv</span>, Namen ohne Bus, <code>buses</code> an Steuergeräten nicht erlaubt.</p>
+</section>
+
+<section class="chap" id="moment">
+  <div class="chap-head"><h2>Moment je Rad</h2></div>
+  <p>Steuert eine VCU die Motoren einzeln, abonniert das Fahrzeug das Moment je Rad statt des Gaspedals:</p>
+  <div class="code"><span class="lbl">JSON</span><pre>&quot;subscribe&quot;: {
+  &quot;torque_FL&quot;: &quot;LOG.VCUsPP_Output.VCUsPP_TorqueFL_TORQUExREQ&quot;,
+  &quot;torque_RL&quot;: { &quot;signal&quot;: &quot;INV.INVRL_Motor_MEASUREMENTS.INVRL_Motor_TORQUExACT&quot;, &quot;scale&quot;: 0.098 }
+}</pre></div>
+  <ul class="list">
+    <li>Gemeint ist das Moment an der Motorwelle in Nm. Das Antriebsmodell begrenzt es auf seine Kennlinie (Strom, Spannung, Drehzahl) und, mit Akku, auf dessen Leistungsgrenze.</li>
+    <li>Im Einspurmodell gilt die Summe beider Räder einer Achse.</li>
+    <li>Negative Momente (Rekuperation) setzt nur <code>PmsmDrive</code> um, die einfachen Motormodelle begrenzen auf null.</li>
+  </ul>
+</section>
+
+<section class="chap" id="replay">
+  <div class="chap-head"><h2>Log abspielen</h2></div>
+  <p>Ein Steuergerät vom Typ <code>replay</code> legt Spalten aus einer CSV-Datei als Signale auf den Bus, z. B. die Momentanforderungen der echten VCU aus einem Fahrzeuglog.
+  So lässt sich das Fahrzeugmodell mit derselben Ansteuerung fahren wie das Auto, ohne die VCU selbst einzubinden.</p>
+  <div class="code"><span class="lbl">JSON</span><pre>{ &quot;name&quot;: &quot;VCU_Log&quot;, &quot;type&quot;: &quot;replay&quot;, &quot;period_ms&quot;: 5, &quot;buses&quot;: [&quot;LOG&quot;, &quot;PER&quot;],
+  &quot;params&quot;: {
+    &quot;file&quot;: &quot;../../logs/accel.csv&quot;,
+    &quot;time_column&quot;: &quot;Time&quot;, &quot;time_unit&quot;: &quot;ms&quot;, &quot;shift_s&quot;: -1.01,
+    &quot;signals&quot;: {
+      &quot;LOG.VCUsPP_Output.VCUsPP_TorqueFL_TORQUExREQ&quot;: &quot;VCUsPP_TorqueFL_TORQUExREQ&quot;,
+      &quot;PER.SCB_Throttle.SCB_Throttle_POS&quot;: { &quot;column&quot;: &quot;CIF_Throttle_POS&quot;, &quot;scale&quot;: 1.0 }
+    } } }</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Eintrag</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">file</td><td>CSV mit Kopfzeile, relativ zur <code>network.json</code>. Komma als Trenner, Namen dürfen in Anführungszeichen stehen.</td></tr>
+      <tr><td class="mono">time_column · time_unit</td><td>Zeitspalte, Vorgabe <code>Time</code> · <code>s</code> oder <code>ms</code>, Vorgabe <code>s</code></td></tr>
+      <tr><td class="mono">shift_s</td><td>Die erste Zeile ist 0, dazu kommt <code>shift_s</code>. <code>-1.01</code> heißt: Sekunde 1,01 im Log ist der Start der Simulation.</td></tr>
+      <tr><td class="mono">signals</td><td>Bussignal → Spalte, oder <code>{ "column", "scale", "offset" }</code>; Wert = Spalte × <code>scale</code> + <code>offset</code></td></tr>
+    </tbody>
+  </table></div>
+  <ul class="list">
+    <li>Zwischen zwei Zeilen hält es den letzten Wert. Leere Zellen und Text wie <code>undefined</code> überspringt es – so passen Exporte, in denen jedes Signal nur in seinem eigenen Takt steht (Grafana).</li>
+    <li>Vor dem ersten Wert sendet es nichts, nach dem Ende des Logs bleibt der letzte Wert stehen.</li>
+    <li>Die Botschaften gehen im Takt aus <code>messages</code>, sonst mit <code>period_ms</code>.</li>
+    <li>Startet das Log in Fahrt, die Simulation mit derselben Geschwindigkeit starten (<code>sim.v0</code>) und <code>shift_s</code> passend wählen. Aus dem Stand ist das Reifenmodell beim Anfahren noch zu ungenau.</li>
+  </ul>
 </section>
 
 <section class="chap" id="bauen">
@@ -279,7 +391,12 @@ cmake --build --preset mingw</pre></div>
       <tr><td class="mono">Steuergeraet lehnt ABI ... ab</td><td>gegen das SDK einer anderen DriveLab-Version gebaut – neu bauen</td></tr>
       <tr><td class="mono">Steuergeraet '...' nicht in ...</td><td>Der Name unter <code>params.ecu</code> passt nicht.</td></tr>
       <tr><td class="mono">Nicht aufloesbar: … nicht in der DBC</td><td>Tippfehler im Signalnamen, oder das Signal fehlt in der DBC.</td></tr>
+      <tr><td class="mono">… mehrdeutig, auf PER LOG</td><td>Das Signal gibt es auf mehreren Bussen des Steuergeräts. Mit Busnamen angeben, z. B. <code>PER.DriverInputs.AcceleratorPedal</code>.</td></tr>
+      <tr><td class="mono">Bus '…' ist nicht angeschlossen</td><td>Der Bus fehlt in <code>buses</code> des Steuergeräts.</td></tr>
+      <tr><td class="mono">Botschaft '…' aus 'messages' steht nicht in der DBC</td><td>Warnung: Tippfehler oder falscher Bus unter <code>messages</code>; die Zykluszeit wirkt nicht.</td></tr>
       <tr><td class="mono">Nicht aufloesbar: … wird bereits von … gesendet</td><td>Zwei Steuergeräte senden dieselbe Botschaft. Eines ersetzen, nicht ergänzen.</td></tr>
+      <tr><td class="mono">unbekannte Stellgroesse '…'</td><td>Unter <code>plant.subscribe</code> gehen nur <code>steer</code>, <code>throttle</code>, <code>brake</code> und <code>torque_FL/FR/RL/RR</code>.</td></tr>
+      <tr><td class="mono">Replay: Spalte '…' fehlt</td><td>Spaltenname aus <code>signals</code> oder <code>time_column</code> steht nicht in der Kopfzeile der CSV.</td></tr>
       <tr><td class="mono">Zykluszeit ist kein Vielfaches von base_dt</td><td><code>period_ms</code> oder <code>offset_ms</code> passt nicht zum Grundtakt.</td></tr>
       <tr><td class="mono">'ecus' gehoert nicht in die config.json</td><td>Das Netz gehört in die Fahrzeugdatei unter <code>components.ecus</code>.</td></tr>
       <tr><td>DLL lässt sich nicht überschreiben</td><td>DriveLab läuft noch und hat sie geladen.</td></tr>
@@ -289,8 +406,9 @@ cmake --build --preset mingw</pre></div>
   <h3 class="sub">Grenzen dieser Version</h3>
   <ul class="list">
     <li><strong>Ein Absturz im Steuergerät beendet DriveLab</strong> – die Bibliothek läuft im selben Prozess.</li>
-    <li>Am Fahrzeug kommen normierte Stellgrößen an (Gas, Bremse, Lenkung); ein Moment je Rad geht noch nicht.</li>
-    <li>Ein CAN-Bus; mehrere Busse oder andere Bussysteme gibt es noch nicht.</li>
+    <li>Am Fahrzeug kommen Gas, Bremse, Lenkung und das Antriebsmoment je Rad an; Bremsdruck je Rad geht noch nicht.</li>
+    <li>Das Motormodell kennt noch keinen Überlastschutz (I²t) und kein Verlustkennfeld.</li>
+    <li>Nur CAN. Die Busse sind ideal: jede Botschaft kommt einen Grundtakt später an, ohne Arbitrierung oder Verzögerung durch Buslast.</li>
     <li>Pfade mit Zeichen außerhalb der Windows-Codepage werden nicht überall unterstützt.</li>
     <li>Das Preset <code>msvc</code> ist weniger erprobt als <code>mingw</code>.</li>
   </ul>

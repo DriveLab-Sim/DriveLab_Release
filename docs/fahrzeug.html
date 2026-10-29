@@ -251,7 +251,7 @@
   <div class="tbl-wrap"><table>
     <thead><tr><th>Block</th><th>Schlüssel</th></tr></thead>
     <tbody>
-      <tr><td class="mono">heave · roll</td><td class="mono">motion_ratio · wheel_rate · preload · damping_bump · damping_rebound · bumpstop{gap, rate}</td></tr>
+      <tr><td class="mono">heave · roll</td><td class="mono">motion_ratio · wheel_rate · preload · damping_bump · damping_rebound <em>oder</em> damper_curve · bumpstop{gap, rate}</td></tr>
     </tbody>
   </table></div>
   <div class="note"><span class="t">Radbezogen</span> Alle Raten und Dämpfungen gelten am Rad. <code>motion_ratio</code> rechnet nur für die Diagnose auf das Bauteil um: Federweg = MR · Radweg, Federrate = wheel_rate / MR².</div>
@@ -278,7 +278,7 @@
       <tr><td class="mono">heave_coilover · roll_coilover</td><td>m (y, z)</td><td>Anlenkpunkte des Elements auf linker und rechter Wippe</td></tr>
       <tr><td class="mono">kinematics</td><td>Pfad</td><td><em>optional</em> – Hardpoint-Datei (<code>DoubleWishbone</code>); <code>foot</code> muss auf 2 mm am oberen oder unteren Kugelgelenk liegen</td></tr>
       <tr><td class="mono">rocker_angle</td><td>mm · deg</td><td><em>optional</em> – <code>{ "travel_mm": [-40, 0, 40], "deg": [-30.7, 0, 28.0] }</code>: Winkel der <strong>linken</strong> Wippe über dem Radweg, + = gegen den Uhrzeigersinn von vorn gesehen; rechts gespiegelt. Radwege aufsteigend, 0 eingeschlossen; der Wert bei 0 wird abgezogen. Zwischen den Stützstellen kubischer Spline, außerhalb linear fortgesetzt – die Tabelle sollte den Federweg abdecken</td></tr>
-      <tr><td class="mono">heave · roll</td><td>N/m · N · Ns/m · m</td><td>am Element: <code>spring_rate</code>, <code>preload</code> (Elementkraft in Konstruktionslage, trägt das Fahrzeug), <code>damping</code> oder <code>damping_bump</code>/<code>damping_rebound</code>, <code>bumpstop{gap, rate}</code> (Elementweg). <code>wheel_rate</code> und <code>motion_ratio</code> sind hier nicht erlaubt</td></tr>
+      <tr><td class="mono">heave · roll</td><td>N/m · N · Ns/m · m</td><td>am Element: <code>spring_rate</code>, <code>preload</code> (Elementkraft in Konstruktionslage, trägt das Fahrzeug), <code>damping</code>, <code>damping_bump</code>/<code>damping_rebound</code> oder <code>damper_curve</code>, <code>bumpstop{gap, rate}</code> (Elementweg). <code>wheel_rate</code> und <code>motion_ratio</code> sind hier nicht erlaubt</td></tr>
     </tbody>
   </table></div>
   <p class="tight">Die Radrate enthält auch die Vorspannung über die veränderliche Übersetzung. Bei einem Heave-Element, das sich beim Wanken leicht verkürzt,
@@ -286,6 +286,16 @@
   <code>inspect sds</code> zeigt zusätzlich Übersetzung, Kopplung und Wippenwinkel über dem Radweg.</p>
   <div class="code"><span class="lbl">Report</span><pre>drivelab inspect sds data/sds/sds_va.json --open
 drivelab inspect sds data/sds/rocker_va.json --open</pre></div>
+  <h3 class="sub">Dämpferkennlinie</h3>
+  <p>Statt <code>damping_bump</code>/<code>damping_rebound</code> nimmt jedes Element eine Kennlinie, z. B. aus dem Prüfstandsdiagramm des Herstellers.
+  Kräfte als Beträge, Druck- und Zugstufe getrennt; zwischen den Punkten linear, über den letzten Punkt hinaus mit der letzten Steigung.
+  Bei <code>DecoupledRocker</code> gilt sie am Element (Kolbengeschwindigkeit), bei <code>DecoupledRollHeave</code> am Rad.</p>
+  <div class="code"><span class="lbl">JSON</span><pre><span class="s">"heave"</span>: { <span class="s">"spring_rate"</span>: <span class="n">113832</span>, <span class="s">"preload"</span>: <span class="n">1057</span>,
+  <span class="s">"damper_curve"</span>: {
+    <span class="s">"v"</span>:       [<span class="n">0</span>, <span class="n">0.011</span>, <span class="n">0.026</span>, <span class="n">0.053</span>, <span class="n">0.131</span>, <span class="n">0.263</span>],
+    <span class="s">"bump"</span>:    [<span class="n">0</span>, <span class="n">43</span>,    <span class="n">97</span>,    <span class="n">154</span>,   <span class="n">244</span>,   <span class="n">359</span>],
+    <span class="s">"rebound"</span>: [<span class="n">0</span>, <span class="n">35</span>,    <span class="n">96</span>,    <span class="n">177</span>,   <span class="n">261</span>,   <span class="n">356</span>] } }</pre></div>
+  <p class="tight"><code>v</code> in m/s, beginnt bei 0 und steigt; <code>bump</code> und <code>rebound</code> in N, gleich lang wie <code>v</code>. <code>inspect sds</code> zeigt die Kennlinie am Rad.</p>
 </section>
 
 <section class="chap" id="kinematik">

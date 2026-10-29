@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stand &amp; Roadmap · DriveLab</title>
+<link rel="stylesheet" href="assets/style.css">
+<!-- Pflege: Stand einer Zeile über data-status ändern (done, part, open). Übersicht und Zähler rechnet das Skript am Seitenende. -->
+<style>
+.st{display:inline-flex;align-items:center;gap:6px;font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.04em;padding:2px 8px 2px 7px;border-radius:999px;white-space:nowrap}
+.st::before{content:"";width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.st.done{background:var(--user-soft);color:var(--user-deep)}
+.st.done::before{background:var(--user)}
+.st.part{background:var(--warn-soft);color:var(--warn)}
+.st.part::before{background:var(--warn)}
+.st.open{background:var(--panel-2);color:var(--muted)}
+.st.open::before{background:transparent;border:1.5px solid var(--muted);width:5px;height:5px}
+.st-legend{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;font-size:13px;color:var(--muted);margin:4px 0 18px}
+.st-legend span{display:inline-flex;align-items:center;gap:8px}
+.st-bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--line-soft)}
+.st-bar i{display:block;height:100%}
+.st-bar i.done{background:var(--user)}
+.st-bar i.part{background:var(--warn)}
+.st-bar i.open{background:#C9D0C5}
+.st-total{border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:16px 18px;margin:0 0 14px;display:grid;gap:10px}
+.st-total .row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px 18px}
+.st-total .big{font-family:"Archivo",sans-serif;font-weight:800;font-size:28px;letter-spacing:-.02em;line-height:1}
+.st-total .big small{font-family:"IBM Plex Sans",sans-serif;font-weight:400;font-size:14px;color:var(--muted);letter-spacing:0;margin-left:6px}
+.st-total .counts{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.st-total .st-bar{height:12px;border-radius:6px}
+.st-areas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:12px;margin:0 0 8px}
+.st-area{display:grid;gap:8px;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel);padding:13px 15px;text-decoration:none;color:var(--ink)}
+.st-area:hover{background:var(--panel-2)}
+.st-area .t{font-family:"Archivo",sans-serif;font-weight:700;font-size:15.5px;letter-spacing:-.01em}
+.st-area .n{font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+table.st-tbl td:nth-child(1){width:34%}
+table.st-tbl td:nth-child(2){width:1%;white-space:nowrap}
+table.st-tbl td:nth-child(3){width:1%;white-space:nowrap;font-family:"IBM Plex Mono",monospace;font-size:12.5px;color:var(--muted)}
+table.st-tbl td:nth-child(4){color:#39443E}
+</style>
+</head>
+<body data-page="stand.html" data-root="" data-track="user">
+<div class="shell">
+<aside class="side" id="side"></aside>
+<main class="main"><div class="page">
+
+<header class="page-head">
+  <span class="k">Anwender · 10</span>
+  <h1>Stand &amp; Roadmap</h1>
+  <p class="lede">Was DriveLab heute kann, was teilweise da ist und was noch fehlt. Stand 29.10.2026, Version 0.2.2.</p>
+</header>
+
+<section class="chap" id="uebersicht">
+  <div class="chap-head"><h2>Übersicht</h2></div>
+  <div class="st-legend">
+    <span><span class="st done">erledigt</span> nutzbar und dokumentiert</span>
+    <span><span class="st part">teilweise</span> vorhanden, mit bekannter Lücke</span>
+    <span><span class="st open">offen</span> geplant</span>
+  </div>
+  <div class="st-total" id="st-total"></div>
+  <div class="st-areas" id="st-areas"></div>
+</section>
+
+<section class="chap" id="fahrdynamik" data-area>
+  <div class="chap-head"><h2>Fahrdynamik &amp; Fahrwerk</h2></div>
+  <div class="tbl-wrap"><table class="st-tbl">
+    <thead><tr><th>Funktion</th><th>Stand</th><th>seit</th><th>Anmerkung</th></tr></thead>
+    <tbody>
+      <tr data-status="done"><td>Einspur-, Zweispur- und Mehrkörpermodell</td><td class="st-cell"></td><td>0.2</td><td>Wahl über <code>simulation_approach</code></td></tr>
+      <tr data-status="done"><td>Achskinematik aus Kennwerten oder Hardpoints</td><td class="st-cell"></td><td>0.2.1</td><td><code>Parametric</code>, <code>DoubleWishbone</code>; als Kennfeld vorberechnet</td></tr>
+      <tr data-status="done"><td>Setup je Achse</td><td class="st-cell"></td><td>0.2.1</td><td>statischer Sturz, Spur, Fahrhöhe</td></tr>
+      <tr data-status="done"><td>Roll-Heave-Federung und entkoppelte Wippe</td><td class="st-cell"></td><td>0.2.2</td><td><code>DecoupledRollHeave</code>, <code>DecoupledRocker</code></td></tr>
+      <tr data-status="done"><td>Dämpferkennlinie</td><td class="st-cell"></td><td>0.2.2</td><td><code>damper_curve</code> aus dem Prüfstandsdiagramm</td></tr>
+      <tr data-status="done"><td>Aerodynamik mit Balance</td><td class="st-cell"></td><td>0.2.2</td><td>Abtrieb je Achse</td></tr>
+      <tr data-status="open"><td>Asymmetrisches Fahrzeug</td><td class="st-cell"></td><td></td><td>Eckgewichte, Setup je Rad</td></tr>
+      <tr data-status="open"><td>Elastokinematik</td><td class="st-cell"></td><td></td><td>Lagersteifigkeiten, Nachgiebigkeit unter Last</td></tr>
+      <tr data-status="open"><td>Rahmensteifigkeit</td><td class="st-cell"></td><td></td><td>Torsion zwischen Vorder- und Hinterachse</td></tr>
+      <tr data-status="open"><td>Aero-Kennfeld</td><td class="st-cell"></td><td></td><td>über Fahrhöhe und Nickwinkel</td></tr>
+      <tr data-status="open"><td>Massenbilanz</td><td class="st-cell"></td><td></td><td>Fahrzeugmasse als Summe der Bauteile</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="chap" id="reifen" data-area>
+  <div class="chap-head"><h2>Reifen</h2></div>
+  <div class="tbl-wrap"><table class="st-tbl">
+    <thead><tr><th>Funktion</th><th>Stand</th><th>seit</th><th>Anmerkung</th></tr></thead>
+    <tbody>
+      <tr data-status="done"><td>Lineares Reifenmodell</td><td class="st-cell"></td><td>0.2</td><td></td></tr>
+      <tr data-status="done"><td>Magic Formula aus <code>.tir</code></td><td class="st-cell"></td><td>0.2.1</td><td>MF 5.2/6.1, Vorzeichen geprüft, Rückstellmoment im Giermoment</td></tr>
+      <tr data-status="done"><td>Einlaufverhalten</td><td class="st-cell"></td><td></td><td>Einlauflänge längs und quer</td></tr>
+      <tr data-status="part"><td>Anfahren aus dem Stand</td><td class="st-cell"></td><td></td><td>Kraft baut sich bei kleiner Geschwindigkeit zu langsam auf, die Räder drehen künstlich durch</td></tr>
+      <tr data-status="part"><td>Abgleich mit Messungen</td><td class="st-cell"></td><td></td><td>Reibwert an einen Accel-Lauf angepasst, Querdynamik noch nicht</td></tr>
+      <tr data-status="open"><td>Reifentemperatur</td><td class="st-cell"></td><td></td><td>Aufwärmen, Einfluss auf den Reibwert</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="chap" id="antrieb" data-area>
+  <div class="chap-head"><h2>Antrieb &amp; Energie</h2></div>
+  <div class="tbl-wrap"><table class="st-tbl">
+    <thead><tr><th>Funktion</th><th>Stand</th><th>seit</th><th>Anmerkung</th></tr></thead>
+    <tbody>
+      <tr data-status="done"><td>Einfache Motormodelle</td><td class="st-cell"></td><td>0.2</td><td><code>SimpleMotor</code>, <code>EMotor</code> mit Wirkungsgrad</td></tr>
+      <tr data-status="done"><td>Synchronmotor mit Umrichter aus dem Datenblatt</td><td class="st-cell"></td><td>0.2.2</td><td><code>PmsmDrive</code>: abhängig von der Akkuspannung, Feldschwächung, Kupferverluste</td></tr>
+      <tr data-status="done"><td>HV-Akku auf Zellebene</td><td class="st-cell"></td><td>0.2.1</td><td>SoC, Klemmenspannung, Strom- und Leistungsgrenzen, z. B. 80 kW</td></tr>
+      <tr data-status="done"><td>Moment je Rad vom Steuergerät</td><td class="st-cell"></td><td>0.2.2</td><td><code>torque_FL</code> … <code>torque_RR</code> in <code>plant.subscribe</code></td></tr>
+      <tr data-status="part"><td>Rekuperation</td><td class="st-cell"></td><td></td><td><code>PmsmDrive</code> kann generatorisch, Bremsmischung fehlt</td></tr>
+      <tr data-status="part"><td>Verluste</td><td class="st-cell"></td><td></td><td>Kupferverluste in <code>PmsmDrive</code>, der Rest pauschal; kein Kennfeld η(n, M)</td></tr>
+      <tr data-status="open"><td>Überlastschutz und Derating</td><td class="st-cell"></td><td></td><td>I²t des Umrichters, Temperaturgrenzen</td></tr>
+      <tr data-status="open"><td>Thermik</td><td class="st-cell"></td><td></td><td>Motor, Umrichter, Akku</td></tr>
+      <tr data-status="open"><td>Akku-Dynamik</td><td class="st-cell"></td><td></td><td>RC-Glied, Zellstreuung</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="chap" id="bremse-lenkung" data-area>
+  <div class="chap-head"><h2>Bremse &amp; Lenkung</h2></div>
+  <div class="tbl-wrap"><table class="st-tbl">
+    <thead><tr><th>Funktion</th><th>Stand</th><th>seit</th><th>Anmerkung</th></tr></thead>
+    <tbody>
+      <tr data-status="done"><td>Bremse einfach oder als FMU</td><td class="st-cell"></td><td>0.2</td><td><code>SimpleBrake</code>, <code>FmuBrake</code></td></tr>
+      <tr data-status="open"><td>Bremskraftverteilung</td><td class="st-cell"></td><td></td><td>getrennte Kreise, Balance Bar</td></tr>
+      <tr data-status="open"><td>Pedalweg oder Pedalkraft als Eingang</td><td class="st-cell"></td><td></td><td>heute normiertes Pedal</td></tr>
+      <tr data-status="open"><td>Bremstemperatur</td><td class="st-cell"></td><td></td><td></td></tr>
+      <tr data-status="done"><td>Lenkung mit Übersetzung und Anschlag</td><td class="st-cell"></td><td>0.2.1</td><td><code>Ratio</code>, auch variabel</td></tr>
+      <tr data-status="done"><td>Lenkung mit Nachgiebigkeit</td><td class="st-cell"></td><td>0.2.1</td><td><code>Compliant</code>; Haltemoment am Lenkrad aus Reifenkräften und Lenkachse</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="chap" id="steuergeraete" data-area>
+  <div class="chap-head"><h2>Steuergeräte &amp; Busse</h2></div>
+  <div class="tbl-wrap"><table class="st-tbl">
+    <thead><tr><th>Funktion</th><th>Stand</th><th>seit</th><th>Anmerkung</th></tr></thead>
+    <tbody>
+      <tr data-status="done"><td>Steuergeräte-SDK für C und C++</td><td class="st-cell"></td><td>0.2</td><td>eigene Bibliotheken, zur Laufzeit geladen</td></tr>
+      <tr data-status="done"><td>CAN mit DBC</td><td class="st-cell"></td><td>0.2</td><td>Mitschnitt, Buslast, Report</td></tr>
+      <tr data-status="done"><td>Mehrere Busse, Gateways, Extended IDs</td><td class="st-cell"></td><td>0.2.2</td><td>je Bus eigene DBC und eigener Mitschnitt</td></tr>
+      <tr data-status="done"><td>Log abspielen</td><td class="st-cell"></td><td>0.2.2</td><td>Typ <code>replay</code>, z. B. für einen Grafana-Export</td></tr>
+      <tr data-status="open"><td>Steuergerät als FMU</td><td class="st-cell"></td><td></td><td>z. B. eine VCU aus Simulink</td></tr>
+      <tr data-status="open"><td>Umrichter als virtuelles Steuergerät</td><td class="st-cell"></td><td></td><td>Zustandsmaschine, Drehzahlregler mit Momentgrenzen</td></tr>
+      <tr data-status="open"><td>Restbus</td><td class="st-cell"></td><td></td><td>konstante Signale, Alive-Zähler, einfache Abläufe</td></tr>
+      <tr data-status="open"><td>Bordnetz-Zustände</td><td class="st-cell"></td><td></td><td>Niedervolt, Precharge, Shutdown-Kreis</td></tr>
+      <tr data-status="open"><td>Fehlerinjektion und Testfälle</td><td class="st-cell"></td><td></td><td></td></tr>
+      <tr data-status="open"><td>Steuergerät im eigenen Prozess</td><td class="st-cell"></td><td></td><td>heute beendet ein Absturz im Steuergerät DriveLab</td></tr>
+      <tr data-status="open"><td>Echtzeit und HiL</td><td class="st-cell"></td><td></td><td>Brücke zu einem CAN-Adapter</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="chap" id="umgebung" data-area>
+  <div class="chap-head"><h2>Umgebung &amp; Fahrer</h2></div>
+  <div class="tbl-wrap"><table class="st-tbl">
+    <thead><tr><th>Funktion</th><th>Stand</th><th>seit</th><th>Anmerkung</th></tr></thead>
+    <tbody>
+      <tr data-status="done"><td>Strecken aus Segmenten und OpenDRIVE</td><td class="st-cell"></td><td>0.2</td><td>OpenDRIVE nur in der Ebene</td></tr>
+      <tr data-status="open"><td>Höhenprofil und Unebenheiten</td><td class="st-cell"></td><td></td><td></td></tr>
+      <tr data-status="open"><td>Reibwert je Strecke</td><td class="st-cell"></td><td></td><td>μ-Split, nasse Abschnitte</td></tr>
+      <tr data-status="done"><td>Pfadfahrer und Skriptfahrer</td><td class="st-cell"></td><td>0.2</td><td></td></tr>
+      <tr data-status="open"><td>Fahrer am Limit</td><td class="st-cell"></td><td></td><td>Geschwindigkeitsprofil, Rundenzeit</td></tr>
+      <tr data-status="open"><td>Datengetriebenes Fahrermodell</td><td class="st-cell"></td><td></td><td>aus Messfahrten gelernt</td></tr>
+      <tr data-status="done"><td>Sensoren</td><td class="st-cell"></td><td>0.2</td><td>IMU, Vorausschau auf die Strecke</td></tr>
+      <tr data-status="open"><td>Sensorfehler</td><td class="st-cell"></td><td></td><td>Rauschen, Versatz, Verzug</td></tr>
+      <tr data-status="open"><td>Szenarien nach OpenSCENARIO</td><td class="st-cell"></td><td></td><td></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="chap" id="auswertung" data-area>
+  <div class="chap-head"><h2>Auswertung &amp; Werkzeuge</h2></div>
+  <div class="tbl-wrap"><table class="st-tbl">
+    <thead><tr><th>Funktion</th><th>Stand</th><th>seit</th><th>Anmerkung</th></tr></thead>
+    <tbody>
+      <tr data-status="done"><td>Standardkanäle und Lauf-Report</td><td class="st-cell"></td><td>0.2.1</td><td>mit Kanal-Plotter und kritischen Zuständen</td></tr>
+      <tr data-status="done"><td>Fahrdynamik-Manöver</td><td class="st-cell"></td><td>0.2.1</td><td>Kreisfahrt (ISO 4138), Lenkwinkelsprung und Frequenzgang (ISO 7401)</td></tr>
+      <tr data-status="done"><td>Inspektoren</td><td class="st-cell"></td><td>0.2</td><td>Fahrzeug, Reifen, Kinematik, Federung, Aero, Bremse, Lenkung, Akku, Motor, Steuergeräte</td></tr>
+      <tr data-status="done"><td>Python-Modul</td><td class="st-cell"></td><td>0.2</td><td></td></tr>
+      <tr data-status="done"><td>Installer und Handbuch</td><td class="st-cell"></td><td>0.2</td><td>Installer noch nicht signiert</td></tr>
+      <tr data-status="part"><td>FS-Disziplinen Accel und Skidpad</td><td class="st-cell"></td><td></td><td>Strecken und Kreisfahrt vorhanden, keine eigene Wertung</td></tr>
+      <tr data-status="open"><td>FS-Disziplinen Autocross und Endurance</td><td class="st-cell"></td><td></td><td>Rundstrecke, Energieverbrauch, Wertung</td></tr>
+      <tr data-status="part"><td>Vergleich mit Messdaten</td><td class="st-cell"></td><td></td><td>als Python-Skript im Projekt, noch nicht in DriveLab</td></tr>
+      <tr data-status="open"><td>3D-Visualisierung</td><td class="st-cell"></td><td></td><td>Unreal oder Unity</td></tr>
+      <tr data-status="open"><td>MDF4-Export</td><td class="st-cell"></td><td></td><td></td></tr>
+      <tr data-status="open"><td>Katalog und Varianten</td><td class="st-cell"></td><td></td><td>Bausteine verweisen statt kopieren</td></tr>
+      <tr data-status="open"><td>Parameterstudien</td><td class="st-cell"></td><td></td><td>viele Läufe mit variierten Werten</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="chap" id="validierung" data-area>
+  <div class="chap-head"><h2>Validierung</h2></div>
+  <p>Ein Teilsystem gilt erst als belastbar, wenn es gegen etwas Unabhängiges geprüft ist: eine Handrechnung, ein Datenblatt oder eine Messung.</p>
+  <div class="tbl-wrap"><table class="st-tbl">
+    <thead><tr><th>Teilsystem</th><th>Stand</th><th>gegen</th><th>Ergebnis</th></tr></thead>
+    <tbody>
+      <tr data-status="done"><td>HV-Akku</td><td class="st-cell"></td><td>Handrechnung</td><td>Energie- und Ladungsbilanz exakt, Grenzen eingehalten</td></tr>
+      <tr data-status="done"><td>Synchronmotor <code>PmsmDrive</code></td><td class="st-cell"></td><td>Datenblatt</td><td>Kennlinie bei 500 und 600 V auf 0,53 Nm genau</td></tr>
+      <tr data-status="done"><td>Steuergeräte-Netz</td><td class="st-cell"></td><td>Prüfskript</td><td>Dekodierung je Bus, Weiterleitung in einem Takt, Läufe ohne Busse bitgleich</td></tr>
+      <tr data-status="part"><td>Gesamtfahrzeug, Längsdynamik</td><td class="st-cell"></td><td>Messung</td><td>Accel eines FS-Fahrzeugs unter 1 % genau, Reibwert an diesen Lauf angepasst</td></tr>
+      <tr data-status="open"><td>Gesamtfahrzeug, Querdynamik</td><td class="st-cell"></td><td>Messung</td><td>Skidpad-Messung fehlt</td></tr>
+      <tr data-status="open"><td>Energie und Thermik</td><td class="st-cell"></td><td>Messung</td><td>Endurance-Messung fehlt</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section class="chap" id="naechste-schritte">
+  <div class="chap-head"><h2>Nächste Schritte</h2></div>
+  <p>In dieser Reihenfolge, weil jeder Schritt den nächsten erst prüfbar macht:</p>
+  <ol class="list">
+    <li><strong>Regelsysteme einbinden:</strong> Steuergerät als FMU, Umrichter als virtuelles Steuergerät, Restbus. Damit laufen Traktionskontrolle und Torque Vectoring einer echten VCU im Modell.</li>
+    <li><strong>Reifen:</strong> Anfahren aus dem Stand und Reibwert je Rad und Strecke. Ohne beides lässt sich eine Traktionskontrolle nicht bewerten.</li>
+    <li><strong>Energie und Thermik:</strong> Überlastschutz, Verlustkennfeld, Rekuperation mit Bremsmischung.</li>
+    <li><strong>Rundstrecke:</strong> Autocross- und Endurance-Strecke, Fahrer am Limit, Rundenzeit und Energie als Wertung.</li>
+    <li><strong>Danach:</strong> 3D-Visualisierung und Szenarien nach OpenSCENARIO.</li>
+  </ol>
+</section>
+
+</div></main>
+</div>
+<script>
+(function () {
+  "use strict";
+  var LABEL = { done: "erledigt", part: "teilweise", open: "offen" };
+  var ORDER = ["done", "part", "open"];
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  function bar(n) {
+    var total = n.done + n.part + n.open;
+    var b = el("div", "st-bar");
+    b.setAttribute("role", "img");
+    b.setAttribute("aria-label", n.done + " erledigt, " + n.part + " teilweise, " + n.open + " offen");
+    ORDER.forEach(function (k) {
+      if (!n[k]) return;
+      var i = el("i", k);
+      i.style.width = (100 * n[k] / total) + "%";
+      b.appendChild(i);
+    });
+    return b;
+  }
+
+  var sum = { done: 0, part: 0, open: 0 };
+  var areas = [];
+
+  document.querySelectorAll("section.chap[data-area]").forEach(function (sec) {
+    var n = { done: 0, part: 0, open: 0 };
+    sec.querySelectorAll("tr[data-status]").forEach(function (tr) {
+      var k = tr.getAttribute("data-status");
+      if (!(k in n)) return;
+      n[k]++;
+      sum[k]++;
+      var cell = tr.querySelector("td.st-cell");
+      if (cell) { cell.textContent = ""; cell.appendChild(el("span", "st " + k, LABEL[k])); }
+    });
+    areas.push({ id: sec.id, title: sec.querySelector("h2").textContent, n: n });
+  });
+
+  var total = document.getElementById("st-total");
+  if (total) {
+    var all = sum.done + sum.part + sum.open;
+    var row = el("div", "row");
+    var big = el("div", "big", Math.round(100 * (sum.done + 0.5 * sum.part) / all) + " %");
+    big.appendChild(el("small", "", "des geplanten Umfangs, teilweise Erledigtes halb gezählt"));
+    row.appendChild(big);
+    row.appendChild(el("div", "counts", sum.done + " erledigt · " + sum.part + " teilweise · " + sum.open + " offen"));
+    total.appendChild(row);
+    total.appendChild(bar(sum));
+  }
+
+  var grid = document.getElementById("st-areas");
+  if (grid) {
+    areas.forEach(function (a) {
+      var card = el("a", "st-area");
+      card.href = "#" + a.id;
+      card.appendChild(el("span", "t", a.title));
+      card.appendChild(bar(a.n));
+      card.appendChild(el("span", "n", a.n.done + " von " + (a.n.done + a.n.part + a.n.open) + " erledigt" + (a.n.part ? ", " + a.n.part + " teilweise" : "")));
+      grid.appendChild(card);
+    });
+  }
+})();
+</script>
+<script src="assets/site.js"></script>
+</body>
+</html>

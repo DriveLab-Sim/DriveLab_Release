@@ -3,7 +3,7 @@
 (function () {
   "use strict";
 
-  var VERSION = "0.2";
+  var VERSION = "0.2.2";
 
   var NAV = [
     { track: "user", title: "Anwender", pages: [
@@ -17,7 +17,8 @@
       ["ergebnisse.html",     "6", "Ergebnisse & Reports"],
       ["steuergeraete.html",  "7", "Steuergeräte (SDK)"],
       ["python.html",         "8", "Python"],
-      ["hilfe.html",          "9", "Fehlerbehebung"]
+      ["hilfe.html",          "9", "Fehlerbehebung"],
+      ["stand.html",          "10", "Stand & Roadmap"]
     ]}
   ];
 
