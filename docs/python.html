@@ -14,7 +14,7 @@
 <header class="page-head">
   <span class="k">Anwender · 9</span>
   <h1>Python</h1>
-  <p class="lede">Das Modul <code>drivelab</code> steuert eine Simulation Schritt für Schritt aus Python: Befehl rein, Zustand, Sensoren und Straßenbezug raus. Dazu kommt eine Straßen-API zum Laden, Abfragen und Abtasten von Strecken.</p>
+  <p class="lede">Das Modul <code>drivelab</code> steuert eine Simulation Schritt für Schritt aus Python: Befehl rein, Zustand, Sensoren und Straßenbezug raus. Dazu kommt eine Straßen-API zum Laden, Abfragen und Abtasten von Strecken und die g-g-v-Hülle eines Fahrzeugs.</p>
 </header>
 <section class="chap" id="beispiele">
   <div class="chap-head"><h2>Beispiele</h2></div>
@@ -118,6 +118,28 @@ vx = state[&quot;v_x_body&quot;]            # Zweispur/MKS; Einspur: &quot;xdot&
       <tr><td class="mono">imu</td><td><code>valid</code>, <code>timestamp</code>, <code>acceleration</code> und <code>angular_velocity</code> mit <code>x, y, z</code> im Sensorsystem; Beschleunigung ohne Erdbeschleunigung</td></tr>
     </tbody>
   </table></div>
+</section>
+
+<section class="chap" id="ggv">
+  <div class="chap-head"><h2>g-g-v-Hülle</h2></div>
+  <p>Dieselbe Hülle wie <code>drivelab inspect ggv</code>, quasistatisch aus den Komponentendaten einer Fahrzeugdatei (Zweispur oder MKS), ohne Zeitsimulation.
+  Braucht wie <code>make_env</code> eine gültige Lizenz. <a href="ergebnisse.html#ggv">→ g-g-v-Hülle</a></p>
+  <div class="code"><span class="lbl">Python</span><pre>ggv = drivelab.compute_ggv(<span class="s">"data/vehicle/zweispur.json"</span>)   <span class="c"># speed_step_kmh=10, speed_max_kmh=300, ay_points=21</span>
+
+<span class="k">for</span> s <span class="k">in</span> ggv.speeds:
+    print(<span class="n">3.6</span> * s.v, s.ay_max / <span class="n">9.81</span>, s.limit_lateral)
+
+<span class="k">import</span> pandas <span class="k">as</span> pd
+df = pd.DataFrame(ggv.table())     <span class="c"># v, ay, ax_max, ax_min [m/s, m/s²], limit_drive, limit_brake</span></pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Objekt</th><th>Felder</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">GgvMap</td><td><code>speeds</code>, <code>mass</code>, <code>mass_effective</code> (mit Drehmassen), <code>roll_share_front</code>, <code>brake_share_front</code>, <code>roll_center_front/rear</code> [m], <code>notes</code>; <code>table()</code> = alle Punkte als Spalten</td></tr>
+      <tr><td class="mono">GgvSpeed</td><td><code>v</code> [m/s], <code>ay_max</code> ohne Längskraft, <code>limit_lateral</code> (Achse, die zuerst sättigt), <code>ay_const_speed</code> (größte ay bei gehaltener Geschwindigkeit), <code>points</code></td></tr>
+      <tr><td class="mono">GgvPoint</td><td><code>ay</code>, <code>ax_max</code> (Antreiben), <code>ax_min</code> (Bremsen) [m/s²], <code>limit_drive</code>, <code>limit_brake</code>: was begrenzt (Reifen vorne/hinten, Motoren, Akku, Bremse)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight"><code>ay</code> läuft von 0 bis <code>ay_max</code> (Linkskurve); die Rechtskurve ist spiegelgleich. Leere Werte sind <code>nan</code>.</p>
 </section>
 
 <section class="chap" id="strassen">
