@@ -12,21 +12,23 @@
 <main class="main"><div class="page">
 
 <header class="page-head">
-  <span class="k">Handbuch 0.2.2</span>
+  <span class="k">Handbuch 0.2.3</span>
   <h1>DriveLab</h1>
   <p class="lede">Fahrdynamik-Simulation zum Selberbauen: Fahrzeugmodelle aus austauschbaren Komponenten, virtuelle Steuergeräte am CAN-Bus, Strecken aus JSON oder OpenDRIVE – gesteuert über die Kommandozeile oder aus Python.</p>
 </header>
-<section class="chap" id="download">
+<section class="chap" id="download" data-edition="web">
   <div class="chap-head"><h2>DriveLab ausprobieren</h2></div>
   <p>DriveLab ist aktuell als Alpha-Version für Windows verfügbar. Lade den Installer herunter und folge der Installationsanleitung. Für Simulationen ist eine gültige Lizenz erforderlich.</p>
   <div class="tiles"><a class="tile" href="installation.html"><span class="k">Download &amp; Setup</span><h4>DriveLab installieren →</h4><p>Offizielle Releases, Installation und Lizenzierung.</p></a></div>
 </section>
+
 <section class="chap" id="was">
   <div class="chap-head"><h2>Was DriveLab kann</h2></div>
   <div class="cards">
     <div class="card"><span class="k">Modellieren</span><h4>Fahrzeug aus Komponenten</h4><p>Einspur-, Zweispur- oder MKS-Modell; Reifen, Antrieb, Bremse, Aero, Federung und Kinematik je als eigene Datei – auch als FMU.</p></div>
+    <div class="card"><span class="k">Planen</span><h4>Konzept &amp; Soll-Ist</h4><p>Komponenten erst aus Zielwerten, dann aus Geometrie und Physik. Der Fahrzeug-Report zeigt, wo die Konstruktion das Ziel trifft und wo nicht.</p></div>
     <div class="card"><span class="k">Regeln</span><h4>Virtuelle Steuergeräte</h4><p>Eigene Steuergeräte als DLL an einem oder mehreren CAN-Bussen nach DBC, gebaut mit dem mitgelieferten SDK. Fahrzeuglogs lassen sich als Bussignale abspielen.</p></div>
-    <div class="card"><span class="k">Auswerten</span><h4>Reports</h4><p>HTML-Report je Lauf mit Bus-Mitschnitt, dazu Einzelreports für jede Komponente und das ganze Fahrzeug.</p></div>
+    <div class="card"><span class="k">Auswerten</span><h4>Reports</h4><p>HTML-Report je Lauf mit Bus-Mitschnitt, Fahrwerk in 3D, g-g-v-Hülle, dazu Einzelreports für jede Komponente und das ganze Fahrzeug.</p></div>
     <div class="card"><span class="k">Skripten</span><h4>Python</h4><p>Simulation Schritt für Schritt aus Python fahren, Sensoren auslesen, Strecken laden und abtasten.</p></div>
   </div>
 </section>
@@ -37,13 +39,14 @@
     <a class="tile" href="erste-schritte.html"><span class="k">1 · Neu hier</span><h4>Erste Schritte</h4><p>Installation prüfen, erstes Projekt anlegen, rechnen, Report öffnen.</p></a>
     <a class="tile" href="projekt.html"><span class="k">2 · Aufbau</span><h4>Projekt &amp; config.json</h4><p>Was in einem Projekt liegt und wie die Dateien zusammenhängen.</p></a>
     <a class="tile" href="fahrzeug.html"><span class="k">3 · Referenz</span><h4>Fahrzeug &amp; Komponenten</h4><p>Alle Fahrzeug- und Komponentendateien mit ihren Parametern.</p></a>
-    <a class="tile" href="umgebung.html"><span class="k">4 · Referenz</span><h4>Strecke, Fahrer, Sensoren</h4><p>Streckenformate, Fahrermodelle, POV und IMU.</p></a>
-    <a class="tile" href="cli.html"><span class="k">5 · Werkzeug</span><h4>Kommandozeile</h4><p>Alle <code>drivelab</code>-Befehle auf einen Blick.</p></a>
-    <a class="tile" href="ergebnisse.html"><span class="k">6 · Auswerten</span><h4>Ergebnisse &amp; Reports</h4><p>Was ein Lauf schreibt, Lauf- und Komponentenreports.</p></a>
-    <a class="tile" href="steuergeraete.html"><span class="k">7 · SDK</span><h4>Steuergeräte</h4><p>Eigenes Steuergerät schreiben, bauen und ins Fahrzeug einhängen.</p></a>
-    <a class="tile" href="python.html"><span class="k">8 · Skripten</span><h4>Python</h4><p>Das Modul <code>drivelab</code> und die Beispiele.</p></a>
-    <a class="tile" href="hilfe.html"><span class="k">9 · Wenn es hakt</span><h4>Fehlerbehebung</h4><p>Häufige Meldungen und was dahinter steckt.</p></a>
-    <a class="tile" href="stand.html"><span class="k">10 · Überblick</span><h4>Stand &amp; Roadmap</h4><p>Was erledigt ist, was teilweise da ist und was noch fehlt.</p></a>
+    <a class="tile" href="konzept.html"><span class="k">4 · Planen</span><h4>Konzept &amp; Soll-Ist</h4><p>Zielwerte vorgeben, die Konstruktion dagegen prüfen.</p></a>
+    <a class="tile" href="umgebung.html"><span class="k">5 · Referenz</span><h4>Strecke, Fahrer, Sensoren</h4><p>Streckenformate, Fahrermodelle, POV und IMU.</p></a>
+    <a class="tile" href="cli.html"><span class="k">6 · Werkzeug</span><h4>Kommandozeile</h4><p>Alle <code>drivelab</code>-Befehle auf einen Blick.</p></a>
+    <a class="tile" href="ergebnisse.html"><span class="k">7 · Auswerten</span><h4>Ergebnisse &amp; Reports</h4><p>Was ein Lauf schreibt, Lauf- und Komponentenreports.</p></a>
+    <a class="tile" href="steuergeraete.html"><span class="k">8 · SDK</span><h4>Steuergeräte</h4><p>Eigenes Steuergerät schreiben, bauen und ins Fahrzeug einhängen.</p></a>
+    <a class="tile" href="python.html"><span class="k">9 · Skripten</span><h4>Python</h4><p>Das Modul <code>drivelab</code> und die Beispiele.</p></a>
+    <a class="tile" href="hilfe.html"><span class="k">10 · Wenn es hakt</span><h4>Fehlerbehebung</h4><p>Häufige Meldungen und was dahinter steckt.</p></a>
+    <a class="tile" href="stand.html"><span class="k">11 · Überblick</span><h4>Stand &amp; Roadmap</h4><p>Was erledigt ist, was teilweise da ist und was noch fehlt.</p></a>
   </div>
 </section>
 

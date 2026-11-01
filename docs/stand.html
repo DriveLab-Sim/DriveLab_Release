@@ -45,9 +45,9 @@ table.st-tbl td:nth-child(4){color:#39443E}
 <main class="main"><div class="page">
 
 <header class="page-head">
-  <span class="k">Anwender · 10</span>
+  <span class="k">Anwender · 11</span>
   <h1>Stand &amp; Roadmap</h1>
-  <p class="lede">Was DriveLab heute kann, was teilweise da ist und was noch fehlt. Stand 29.10.2026, Version 0.2.2.</p>
+  <p class="lede">Was DriveLab heute kann, was teilweise da ist und was noch fehlt. Stand 01.11.2026, Version 0.2.3.</p>
 </header>
 
 <section class="chap" id="uebersicht">
@@ -70,12 +70,16 @@ table.st-tbl td:nth-child(4){color:#39443E}
       <tr data-status="done"><td>Achskinematik aus Kennwerten oder Hardpoints</td><td class="st-cell"></td><td>0.2.1</td><td><code>Parametric</code>, <code>DoubleWishbone</code>; als Kennfeld vorberechnet</td></tr>
       <tr data-status="done"><td>Setup je Achse</td><td class="st-cell"></td><td>0.2.1</td><td>statischer Sturz, Spur, Fahrhöhe</td></tr>
       <tr data-status="done"><td>Roll-Heave-Federung und entkoppelte Wippe</td><td class="st-cell"></td><td>0.2.2</td><td><code>DecoupledRollHeave</code>, <code>DecoupledRocker</code></td></tr>
+      <tr data-status="done"><td>Federung aus Zielwerten</td><td class="st-cell"></td><td>0.2.3</td><td><code>Parametric</code>: Hubfrequenz, Dämpfungsmaß, Wanksteifigkeit, Progression, Übersetzung</td></tr>
+      <tr data-status="done"><td>Konzept &amp; Soll-Ist</td><td class="st-cell"></td><td>0.2.3</td><td>Bremse, Kinematik, Federung, Lenkung und Fahrzeugziele im Fahrzeug-Report; Kennwerte über die Schnittstelle gemessen</td></tr>
+      <tr data-status="done"><td>Anti-Dive/-Squat innen oder außen</td><td class="st-cell"></td><td>0.2.3</td><td><code>brake_mount</code>, <code>drive_mount</code> (z. B. Radnabenmotor, außenliegende Bremse)</td></tr>
       <tr data-status="done"><td>Dämpferkennlinie</td><td class="st-cell"></td><td>0.2.2</td><td><code>damper_curve</code> aus dem Prüfstandsdiagramm</td></tr>
       <tr data-status="done"><td>Aerodynamik mit Balance</td><td class="st-cell"></td><td>0.2.2</td><td>Abtrieb je Achse</td></tr>
+      <tr data-status="done"><td>Aerodynamik mit Druckpunkt</td><td class="st-cell"></td><td>0.2.3</td><td><code>Detailed</code>: Druckpunkt längs und in der Höhe, Beiwerte je Achse, Luftdichte</td></tr>
       <tr data-status="open"><td>Asymmetrisches Fahrzeug</td><td class="st-cell"></td><td></td><td>Eckgewichte, Setup je Rad</td></tr>
       <tr data-status="open"><td>Elastokinematik</td><td class="st-cell"></td><td></td><td>Lagersteifigkeiten, Nachgiebigkeit unter Last</td></tr>
       <tr data-status="open"><td>Rahmensteifigkeit</td><td class="st-cell"></td><td></td><td>Torsion zwischen Vorder- und Hinterachse</td></tr>
-      <tr data-status="open"><td>Aero-Kennfeld</td><td class="st-cell"></td><td></td><td>über Fahrhöhe und Nickwinkel</td></tr>
+      <tr data-status="part"><td>Aero-Kennfeld</td><td class="st-cell"></td><td></td><td>linear über der Fahrhöhe je Achse (<code>Detailed</code>, MKS/Zweispur); Tabelle aus der CFD offen</td></tr>
       <tr data-status="open"><td>Massenbilanz</td><td class="st-cell"></td><td></td><td>Fahrzeugmasse als Summe der Bauteile</td></tr>
     </tbody>
   </table></div>
@@ -120,11 +124,13 @@ table.st-tbl td:nth-child(4){color:#39443E}
     <thead><tr><th>Funktion</th><th>Stand</th><th>seit</th><th>Anmerkung</th></tr></thead>
     <tbody>
       <tr data-status="done"><td>Bremse einfach oder als FMU</td><td class="st-cell"></td><td>0.2</td><td><code>SimpleBrake</code>, <code>FmuBrake</code></td></tr>
+      <tr data-status="done"><td>Bremse aus Zielwerten</td><td class="st-cell"></td><td>0.2.3</td><td><code>Parametric</code>: Verzögerung und Verteilung</td></tr>
       <tr data-status="open"><td>Bremskraftverteilung</td><td class="st-cell"></td><td></td><td>getrennte Kreise, Balance Bar</td></tr>
       <tr data-status="open"><td>Pedalweg oder Pedalkraft als Eingang</td><td class="st-cell"></td><td></td><td>heute normiertes Pedal</td></tr>
       <tr data-status="open"><td>Bremstemperatur</td><td class="st-cell"></td><td></td><td></td></tr>
       <tr data-status="done"><td>Lenkung mit Übersetzung und Anschlag</td><td class="st-cell"></td><td>0.2.1</td><td><code>Ratio</code>, auch variabel</td></tr>
       <tr data-status="done"><td>Lenkung mit Nachgiebigkeit</td><td class="st-cell"></td><td>0.2.1</td><td><code>Compliant</code>; Haltemoment am Lenkrad aus Reifenkräften und Lenkachse</td></tr>
+      <tr data-status="done"><td>Zahnstangenlenkung aus Hardpoints</td><td class="st-cell"></td><td>0.2.3</td><td><code>Rack</code>: C-Faktor, Radlenkwinkel aus der Vorderachskinematik</td></tr>
     </tbody>
   </table></div>
 </section>
@@ -158,7 +164,7 @@ table.st-tbl td:nth-child(4){color:#39443E}
       <tr data-status="open"><td>Höhenprofil und Unebenheiten</td><td class="st-cell"></td><td></td><td></td></tr>
       <tr data-status="open"><td>Reibwert je Strecke</td><td class="st-cell"></td><td></td><td>μ-Split, nasse Abschnitte</td></tr>
       <tr data-status="done"><td>Pfadfahrer und Skriptfahrer</td><td class="st-cell"></td><td>0.2</td><td></td></tr>
-      <tr data-status="open"><td>Fahrer am Limit</td><td class="st-cell"></td><td></td><td>Geschwindigkeitsprofil, Rundenzeit</td></tr>
+      <tr data-status="open"><td>Fahrer am Limit</td><td class="st-cell"></td><td></td><td>Geschwindigkeitsprofil aus der g-g-v-Hülle, Rundenzeit</td></tr>
       <tr data-status="open"><td>Datengetriebenes Fahrermodell</td><td class="st-cell"></td><td></td><td>aus Messfahrten gelernt</td></tr>
       <tr data-status="done"><td>Sensoren</td><td class="st-cell"></td><td>0.2</td><td>IMU, Vorausschau auf die Strecke</td></tr>
       <tr data-status="open"><td>Sensorfehler</td><td class="st-cell"></td><td></td><td>Rauschen, Versatz, Verzug</td></tr>
@@ -177,10 +183,11 @@ table.st-tbl td:nth-child(4){color:#39443E}
       <tr data-status="done"><td>Inspektoren</td><td class="st-cell"></td><td>0.2</td><td>Fahrzeug, Reifen, Kinematik, Federung, Aero, Bremse, Lenkung, Akku, Motor, Steuergeräte</td></tr>
       <tr data-status="done"><td>Python-Modul</td><td class="st-cell"></td><td>0.2</td><td></td></tr>
       <tr data-status="done"><td>Installer und Handbuch</td><td class="st-cell"></td><td>0.2</td><td>Installer noch nicht signiert</td></tr>
-      <tr data-status="part"><td>FS-Disziplinen Accel und Skidpad</td><td class="st-cell"></td><td></td><td>Strecken und Kreisfahrt vorhanden, keine eigene Wertung</td></tr>
+      <tr data-status="part"><td>g-g-v-Hülle</td><td class="st-cell"></td><td>0.2.3</td><td>experimentell, quasistatisch aus den Komponentendaten; zeigt, was begrenzt; mit 3D-Ansicht</td></tr>
+      <tr data-status="part"><td>FS-Disziplinen Accel und Skidpad</td><td class="st-cell"></td><td></td><td>Strecken und Kreisfahrt vorhanden, ideale Zeiten aus der g-g-v-Hülle, keine eigene Wertung</td></tr>
       <tr data-status="open"><td>FS-Disziplinen Autocross und Endurance</td><td class="st-cell"></td><td></td><td>Rundstrecke, Energieverbrauch, Wertung</td></tr>
       <tr data-status="part"><td>Vergleich mit Messdaten</td><td class="st-cell"></td><td></td><td>als Python-Skript im Projekt, noch nicht in DriveLab</td></tr>
-      <tr data-status="open"><td>3D-Visualisierung</td><td class="st-cell"></td><td></td><td>Unreal oder Unity</td></tr>
+      <tr data-status="part"><td>3D-Visualisierung</td><td class="st-cell"></td><td>0.2.3</td><td><code>drivelab replay</code>: Fahrwerk und Federung im Browser aus einem Lauf oder als Bewegungsablauf; live und Strecke in 3D offen</td></tr>
       <tr data-status="open"><td>MDF4-Export</td><td class="st-cell"></td><td></td><td></td></tr>
       <tr data-status="open"><td>Katalog und Varianten</td><td class="st-cell"></td><td></td><td>Bausteine verweisen statt kopieren</td></tr>
       <tr data-status="open"><td>Parameterstudien</td><td class="st-cell"></td><td></td><td>viele Läufe mit variierten Werten</td></tr>

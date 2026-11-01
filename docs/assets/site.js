@@ -1,24 +1,51 @@
 /* DriveLab-Handbuch: Navigation, Kopierknoepfe, Systemlandkarte.
-   Neue Seite: Datei anlegen und hier in NAV eintragen – sonst nichts. */
+   Neue Seite: Datei anlegen und hier in NAV eintragen – sonst nichts.
+   Kapitelnummern und Version stehen nur hier; Seitenkopf und Kacheln uebernehmen sie. */
 (function () {
   "use strict";
 
-  var VERSION = "0.2.2";
+  var VERSION = "0.2.3";
+
+  // "local": Handbuch im Quellbaum und in der Installation. Doku/make_web_docs.py setzt "web" fuer die GitHub-Seite.
+  var EDITION = "web";
+  document.documentElement.classList.add("edition-" + EDITION);
 
   var NAV = [
     { track: "user", title: "Anwender", pages: [
       ["index.html",          "",  "Start"],
-      ["installation.html",   "0", "Download & Installation"],
+      ["installation.html",   "0", "Download & Installation", "web"],
       ["erste-schritte.html", "1", "Erste Schritte"],
       ["projekt.html",        "2", "Projekt & config.json"],
       ["fahrzeug.html",       "3", "Fahrzeug & Komponenten"],
-      ["umgebung.html",       "4", "Strecke, Fahrer, Sensoren"],
-      ["cli.html",            "5", "Kommandozeile"],
-      ["ergebnisse.html",     "6", "Ergebnisse & Reports"],
-      ["steuergeraete.html",  "7", "Steuergeräte (SDK)"],
-      ["python.html",         "8", "Python"],
-      ["hilfe.html",          "9", "Fehlerbehebung"],
-      ["stand.html",          "10", "Stand & Roadmap"]
+      ["konzept.html",        "4", "Konzept & Soll-Ist"],
+      ["umgebung.html",       "5", "Strecke, Fahrer, Sensoren"],
+      ["cli.html",            "6", "Kommandozeile"],
+      ["ergebnisse.html",     "7", "Ergebnisse & Reports"],
+      ["steuergeraete.html",  "8", "Steuergeräte (SDK)"],
+      ["python.html",         "9", "Python"],
+      ["hilfe.html",          "10", "Fehlerbehebung"],
+      ["stand.html",          "11", "Stand & Roadmap"]
+    ]},
+    // Nur im Quellbaum, wird nicht installiert. Erscheint nur auf dev/-Seiten.
+    { track: "dev", title: "Entwickler", pages: [
+      ["dev/index.html",        "",   "Übersicht"],
+      ["dev/bauen.html",        "1",  "Bauen & Ausliefern"],
+      ["dev/architektur.html",  "2",  "Architektur"],
+      ["dev/module.html",       "3",  "Modulübersicht"],
+      ["dev/konventionen.html", "4",  "Konventionen"],
+      ["dev/env.html",          "5",  "Simulationskern env/"],
+      ["dev/modelle.html",      "6",  "Fahrzeugmodelle models/"],
+      ["dev/komponenten.html",  "7",  "Komponenten components/"],
+      ["dev/fabriken.html",     "8",  "Fabriken & Konfig-Pipeline"],
+      ["dev/strassen.html",     "9",  "Straßen roads/"],
+      ["dev/fahrer.html",       "10", "Fahrer driver/"],
+      ["dev/vecu.html",         "11", "Steuergeräte vECU/"],
+      ["dev/reports.html",      "12", "Reports & Inspektion"],
+      ["dev/cli.html",          "13", "CLI apps/cli/"],
+      ["dev/bindings.html",     "14", "Python-Bindings"],
+      ["dev/gui.html",          "15", "GUI apps/gui/"],
+      ["dev/erweitern.html",    "16", "Erweitern"],
+      ["dev/roadmap.html",      "17", "Baustellen & Roadmap"]
     ]}
   ];
 
@@ -27,6 +54,11 @@
   var here = body.getAttribute("data-page") || "index.html";
   var onDev = body.getAttribute("data-track") === "dev";
 
+  // 4. Eintrag einer Seite = Ausgabe, in der sie erscheint ("web"); ohne = immer
+  NAV.forEach(function (part) {
+    part.pages = part.pages.filter(function (p) { return !p[3] || p[3] === EDITION; });
+  });
+
   function el(tag, cls, text) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -34,9 +66,29 @@
     return e;
   }
 
+  /* ---------- Version und Kapitelnummern aus NAV ---------- */
+  var numberOf = {};
+  NAV.forEach(function (part) {
+    part.pages.forEach(function (p) { numberOf[p[0]] = p[1]; });
+  });
+  var head = document.querySelector(".page-head .k");
+  if (head) {
+    head.textContent = numberOf[here]
+      ? head.textContent.replace(/\d+$/, numberOf[here])
+      : head.textContent.replace(/\d+(\.\d+)+$/, VERSION);
+  }
+  var dir = here.slice(0, here.lastIndexOf("/") + 1);
+  document.querySelectorAll("a.tile[href]").forEach(function (a) {
+    var k = a.querySelector(".k"), no = numberOf[dir + a.getAttribute("href")];
+    if (k && no) k.textContent = k.textContent.replace(/^\d+/, no);
+  });
+
   /* ---------- Abschnitte der Seite: Kapitel, sonst Unterkapitel ---------- */
   var anchors = [];
-  var chapNodes = document.querySelectorAll("section.chap[id]");
+  var chapNodes = Array.prototype.filter.call(document.querySelectorAll("section.chap[id]"), function (s) {
+    var only = s.getAttribute("data-edition");
+    return !only || only === EDITION;
+  });
   if (chapNodes.length > 1) {
     chapNodes.forEach(function (s) {
       var h = s.querySelector("h2");

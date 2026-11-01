@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Konzept &amp; Soll-Ist · DriveLab</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="konzept.html" data-root="" data-track="user">
+<div class="shell">
+<aside class="side" id="side"></aside>
+<main class="main"><div class="page">
+
+<header class="page-head">
+  <span class="k">Anwender · 4</span>
+  <h1>Konzept &amp; Soll-Ist</h1>
+  <p class="lede">Jede Komponente gibt es als <strong>Konzept</strong> aus Zielwerten und als <strong>Detail</strong> aus Geometrie oder Physik – mit derselben Schnittstelle.
+  Beide lassen sich simulieren, und der Fahrzeug-Report stellt sie gegenüber: Was die Ziele verlangen und was die Konstruktion davon trifft.</p>
+</header>
+
+<section class="chap" id="prinzip">
+  <div class="chap-head"><h2>Das Prinzip</h2></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Komponente</th><th>Konzept (type)</th><th>Detail (type)</th><th>Vergleich in der Fahrzeugdatei</th></tr></thead>
+    <tbody>
+      <tr><td>Bremse</td><td class="mono">Parametric</td><td class="mono">SimpleBrake · FmuBrake</td><td class="mono">targets.brake</td></tr>
+      <tr><td>Kinematik</td><td class="mono">Parametric</td><td class="mono">DoubleWishbone</td><td class="mono">targets.kinematics.front/rear</td></tr>
+      <tr><td>Federung</td><td class="mono">Parametric</td><td class="mono">DecoupledRocker · DecoupledRollHeave</td><td class="mono">targets.sds.front/rear</td></tr>
+      <tr><td>Lenkung</td><td class="mono">Ratio · Compliant</td><td class="mono">Rack</td><td class="mono">targets.steering</td></tr>
+      <tr><td>Fahrzeug</td><td class="mono">VehicleTargets</td><td>alle eingebauten Komponenten</td><td class="mono">targets.vehicle</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight"><code>components</code> bestimmt, womit gerechnet wird; <code>targets</code> nennt je Komponente die Datei, gegen die verglichen wird. Konzept und Detail werden
+  <strong>mit derselben Messung</strong> ausgewertet – über die Schnittstelle, nicht über die Parameter. Deshalb sind die Zahlen direkt vergleichbar, auch bei einer FMU.</p>
+  <p class="tight">Bis auf die Grundgrößen (Bremse: Verzögerung und Verteilung; Federung: Hub- und Wankrate in einer der Formen) sind alle Zielwerte optional: Der Anwender gibt nur vor,
+  was ihn interessiert. Unbekannte Schlüssel in Kinematik, Federung und Fahrzeugzielen werden als Fehler gemeldet – meist ein Tippfehler.
+  Werte, die das Fahrzeug liefert (Masse, Radstand, Spurweite, Reifenradius und -rate, Schwerpunkthöhe), kommen immer aus der Fahrzeugdatei; <code>reference</code> in einer
+  Konzeptdatei gilt nur für den Einzel-Report ohne Fahrzeug.</p>
+</section>
+
+<section class="chap" id="tabelle">
+  <div class="chap-head"><h2>Die Vergleichstabelle</h2></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Status</th><th>Bedeutung</th><th>Abweichung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">target</td><td>in der Konzeptdatei gesetzt</td><td>Ist − Soll</td></tr>
+      <tr><td class="mono">derived</td><td>folgt aus anderen Werten (z. B. Sturz beim Wanken, Wendekreis, Rollasymmetrie) – für Soll und Ist berechnet</td><td>Ist − Soll</td></tr>
+      <tr><td class="mono">not set</td><td>offen gelassen; nur der Ist-Wert wird gezeigt</td><td>–</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Gemessen wird an den Hubenden der Konzeptdatei (<code>travel_bump_mm</code>, <code>travel_rebound_mm</code>). Jede Komponente zeigt im eigenen Report dieselben
+  Kennwerte als Tabelle „Characteristics“ – daraus lässt sich umgekehrt ein Konzept aus einer bestehenden Konstruktion ableiten.</p>
+</section>
+
+<section class="chap" id="fahrzeugziele">
+  <div class="chap-head"><h2>Fahrzeugziele</h2></div>
+  <p>Ziele, die nicht zu einer einzelnen Komponente gehören, stehen in einer eigenen Datei vom Typ <code>VehicleTargets</code>. Der Report vergleicht sie mit den
+  eingebauten Komponenten.</p>
+  <div class="code"><span class="lbl">JSON · data/vehicle/cure_targets.json</span><pre>{ <span class="s">"type"</span>: <span class="s">"VehicleTargets"</span>,
+  <span class="s">"params"</span>: { <span class="s">"heave_frequency_front_hz"</span>: <span class="n">1.9</span>, <span class="s">"heave_frequency_rear_hz"</span>: <span class="n">2.0</span>,
+              <span class="s">"roll_stiffness_front_pct"</span>: <span class="n">55</span>, <span class="s">"roll_gradient_deg_per_g"</span>: <span class="n">4.5</span>, <span class="s">"turning_circle_m"</span>: <span class="n">10.0</span> } }</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Schlüssel</th><th>Einheit</th><th>Ist aus</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">heave_frequency_front_hz · _rear_hz</td><td>Hz</td><td>Hubrate der Federung in Reihe mit der Reifenrate, gefederte Eckmasse</td></tr>
+      <tr><td class="mono">heave_damping_ratio_front · _rear</td><td>–</td><td>Hubdämpfung Druckstufe am Rad / 2·√(Hubrate am Rad · gefederte Eckmasse)</td></tr>
+      <tr><td class="mono">roll_stiffness_front_nm_per_deg · _rear_nm_per_deg</td><td>Nm/deg</td><td>Wankrate am Rad · Spurweite² / 2, ohne Reifen</td></tr>
+      <tr><td class="mono">roll_stiffness_front_pct</td><td>%</td><td>Anteil vorne an der Wanksteifigkeit</td></tr>
+      <tr><td class="mono">roll_gradient_deg_per_g</td><td>deg/g</td><td>gefederte Masse · g · Abstand Schwerpunkt–Wankachse / Wanksteifigkeit; Wankachse durch die Wankzentren der Kinematik</td></tr>
+      <tr><td class="mono">turning_circle_m</td><td>m</td><td>2 · Radstand / sin(Lenkwinkel außen) beim kleineren Anschlag aus Lenkung und Vorderachse</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Mit Wankgradient und -verteilung als Ziel nennt der Report zusätzlich, welche Wanksteifigkeit die beiden Achsen dafür bräuchten – der Wert für
+  <code>roll_stiffness_nm_per_deg</code> in den Federungskonzepten.</p>
+</section>
+
+<section class="chap" id="beispiel">
+  <div class="chap-head"><h2>Beispiel: Konzept und Detail eines Fahrzeugs</h2></div>
+  <p>Das Beispielprojekt enthält ein Fahrzeug zweimal (MKS-Modell, CURE-Hardpoints):</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Datei</th><th>Inhalt</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">vehicle/cure_concept.json</td><td>nur Konzepte: <code>parametricBrake</code>, <code>soll_VA/HA</code>, <code>soll_sds_va/ha</code>, <code>ratio</code>; vergleicht gegen die Fahrzeugziele</td></tr>
+      <tr><td class="mono">vehicle/cure_detail.json</td><td>Details: <code>simpleBrake</code>, Hardpoints <code>cureVL/HL</code>, Wippen <code>cure_rocker_va/ha</code> (unsymmetrisch), Zahnstange <code>rack_cure</code>; vergleicht jede Komponente mit dem Konzept und das Fahrzeug mit den Zielen</td></tr>
+      <tr><td class="mono">vehicle/cure_targets.json</td><td>Fahrzeugziele</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><span class="lbl">Reports</span><pre>drivelab inspect vehicle data/vehicle/cure_concept.json --open
+drivelab inspect vehicle data/vehicle/cure_detail.json --open</pre></div>
+  <p class="tight">Zum Simulieren in <code>config.json</code> <code>"vehicle"</code> auf eine der beiden Dateien setzen und <code>drivelab run &lt;projekt&gt;</code> – so zeigt derselbe Lauf, was die Ziele
+  fahrdynamisch bringen und was die Konstruktion davon hält.</p>
+  <h3 class="sub">Was der Vergleich mit den Beispieldaten zeigt</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Bereich</th><th>Befund</th></tr></thead>
+    <tbody>
+      <tr><td>Bremse</td><td>die einfache Bremse erreicht nur rund 10 % der Zielverzögerung, Verteilung 50 statt 30 % hinten</td></tr>
+      <tr><td>Kinematik vorne</td><td>Wankzentrum, Sturzgewinn, Nachlauf und Lenkrollradius treffen; Spreizung +1,6°, Ackermann 73 statt 60 %, deutliches Bump Steer der Spurstange (0,15 deg/mm). Statischer Sturz und Spur sind 0, weil die Hardpoints ohne <code>setup</code> ausgewertet werden</td></tr>
+      <tr><td>Federung</td><td>Hubfrequenz vorne 2,0 statt 1,9 Hz; Heave und Roll sind entkoppelt, aber die unsymmetrische Wippe macht die Wankrate am Wegende links und rechts rund 9 % verschieden. Am Ausfederende ist die Hubrate viel höher als im Konzept, weil der Anschlag der Wippe auf den Elementweg in beide Richtungen wirkt; das Konzept kennt nur den Druckanschlag</td></tr>
+      <tr><td>Fahrzeug</td><td>Wankverteilung 59 statt 55 % vorne, Wankgradient trifft; Wendekreis 13,4 statt 10 m, weil der Zahnstangenhub vor dem Anschlag der Achse endet</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Die Federwerte der Wippen sind Platzhalter, die Bremse ein einfaches Modell – die Befunde zeigen, wie der Vergleich arbeitet, nicht das echte Fahrzeug.</p>
+</section>
+
+<section class="chap" id="ablauf">
+  <div class="chap-head"><h2>Vorgehen für ein eigenes Fahrzeug</h2></div>
+  <ol>
+    <li>Konzeptdateien anlegen und nur die Zielwerte eintragen, die feststehen. Fahrzeug mit diesen Komponenten simulieren, Ziele schärfen.</li>
+    <li>Fahrzeugziele (<code>VehicleTargets</code>) eintragen; der Report des Konzeptfahrzeugs zeigt, ob die Komponentenziele zusammenpassen.</li>
+    <li>Sobald Konstruktionsdaten da sind: Detaildateien unter <code>components</code>, die Konzepte unter <code>targets</code>. Der Report zeigt je Komponente die Abweichung.</li>
+    <li>Konstruktion nachziehen oder – wenn der Bauraum es nicht hergibt – das Ziel bewusst anpassen und im Konzeptfahrzeug prüfen, was es kostet.</li>
+  </ol>
+</section>
+
+</div></main>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

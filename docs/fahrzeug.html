@@ -51,6 +51,13 @@
       <tr><td class="mono">ecus</td><td>nein</td><td>Steuergeräte-Netz, <a href="steuergeraete.html">→ Steuergeräte</a>. Ohne gehen die Fahrerbefehle direkt ans Fahrzeug.</td></tr>
     </tbody>
   </table></div>
+  <p class="tight"><strong>Zielwerte (optional):</strong> Ein Block <code>"targets"</code> neben <code>components</code> nennt je Komponente eine Datei mit Soll-Werten
+  (<code>"type": "Parametric"</code>). Simuliert wird weiter mit <code>components</code>; der Fahrzeug-Report stellt Soll und Ist in einer Tabelle gegenüber.
+  Heute für <code>brake</code> (<a href="#bremse">→ Bremse</a>), <code>kinematics</code> und <code>sds</code> mit <code>front</code>/<code>rear</code> (<a href="#kinematik">→ Kinematik</a>, <a href="#federung">→ Federung</a>),
+  <code>steering</code> (<a href="#lenkung">→ Lenkung</a>) und <code>vehicle</code> für Fahrzeugziele. Ablauf und Beispiel: <a href="konzept.html">→ Konzept &amp; Soll-Ist</a>.</p>
+  <div class="code"><span class="lbl">JSON · targets</span><pre><span class="s">"components"</span>: { …, <span class="s">"brake"</span>: <span class="s">"../brake/simpleBrake.json"</span> },
+<span class="s">"targets"</span>:    { <span class="s">"brake"</span>: <span class="s">"../brake/parametricBrake.json"</span> }</pre></div>
+  <div class="code"><span class="lbl">Report</span><pre>drivelab inspect vehicle data/vehicle/zweispur.json --open</pre></div>
 
   <details class="fold"><summary>Fahrzeugparameter – alle drei Modelle</summary><div class="fold-body">
   <div class="tbl-wrap"><table>
@@ -165,6 +172,7 @@
     <tbody>
       <tr><td class="mono">"SimpleBrake"</td><td>Pedal → Druck → Klemmkraft → Radmoment, verteilt über <code>xi</code></td></tr>
       <tr><td class="mono">"FmuBrake"</td><td>bindet eine <span class="file">.fmu</span> ein (FMI 3.0 Co-Simulation, 64 Bit Windows)</td></tr>
+      <tr><td class="mono">"Parametric"</td><td>Soll aus Zielwerten: Verzögerung bei vollem Pedal und Bremskraftverteilung; linear im Pedal</td></tr>
     </tbody>
   </table></div>
   <div class="code"><span class="lbl">JSON · SimpleBrake</span><pre>{ <span class="s">"type"</span>: <span class="s">"SimpleBrake"</span>,
@@ -185,6 +193,18 @@
     <span class="s">"inputs"</span>:  { <span class="s">"pedal"</span>: <span class="s">"brakePedal"</span> },
     <span class="s">"outputs"</span>: { <span class="s">"torque"</span>: [<span class="s">"torqueFL"</span>, <span class="s">"torqueFR"</span>, <span class="s">"torqueRL"</span>, <span class="s">"torqueRR"</span>] } } }</pre></div>
   <p class="tight"><code>mapping</code> verbindet DriveLab mit den Variablennamen der FMU: ein Eingang für das Pedal, genau vier Radmomente VL, VR, HL, HR.</p>
+  <div class="code"><span class="lbl">JSON · Parametric</span><pre>{ <span class="s">"type"</span>: <span class="s">"Parametric"</span>,
+  <span class="s">"params"</span>:    { <span class="s">"decel_max_g"</span>: <span class="n">1.2</span>, <span class="s">"rear_share"</span>: <span class="n">0.3</span> },
+  <span class="s">"reference"</span>: { <span class="s">"mass"</span>: <span class="n">1500</span>, <span class="s">"wheel_radius"</span>: <span class="n">0.3</span> } }</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Parameter</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">decel_max_g</td><td>g</td><td>Verzögerung bei vollem Pedal</td></tr>
+      <tr><td class="mono">rear_share</td><td>–</td><td>Anteil der Hinterachse an der Bremskraft 0…1</td></tr>
+      <tr><td class="mono">reference.mass · wheel_radius</td><td>kg · m</td><td><em>optional</em> – nur für den Einzel-Report; im Fahrzeug gelten Masse und Reifenradien der Fahrzeugdatei</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Als <code>targets.brake</code> eingetragen, vergleicht der Fahrzeug-Report sie mit der eingebauten Bremse: Verzögerung, Verteilung und Achsmomente, Soll gegen Ist.</p>
   <div class="code"><span class="lbl">Report</span><pre>drivelab inspect brake data/brake/simpleBrake.json --open</pre></div>
 </section>
 
@@ -198,6 +218,21 @@
     <tbody>
       <tr><td class="mono">"Ratio"</td><td>low</td><td>starre Lenkung: konstante oder variable Übersetzung, Anschlag am Lenkrad</td></tr>
       <tr><td class="mono">"Compliant"</td><td>mid</td><td>wie <code>Ratio</code>, dazu Nachgiebigkeit: das Lenkachsmoment verdreht die Räder um M / c</td></tr>
+      <tr><td class="mono">"Rack"</td><td>high</td><td>Zahnstange: Lenkrad → Ritzel (C-Faktor) → Zahnstange → Spurstangen aus den Hardpoints der Vorderachse; Übersetzung und Anschlag folgen aus der Geometrie. Optional nachgiebig wie <code>Compliant</code></td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><span class="lbl">JSON · data/steering/rack_cure.json</span><pre>{ <span class="s">"type"</span>: <span class="s">"Rack"</span>,
+  <span class="s">"kinematics"</span>: <span class="s">"../kinematics/cureVL.json"</span>,
+  <span class="s">"params"</span>: { <span class="s">"c_factor_mm_per_rev"</span>: <span class="n">80</span>, <span class="s">"rack_travel_mm"</span>: <span class="n">25</span> } }</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Rack</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">kinematics</td><td>Pfad</td><td>Hardpoint-Datei der Vorderachse (relativ zur Lenkungsdatei). Der Radlenkwinkel über dem Zahnstangenweg kommt aus den Spurstangen – dieselbe Rechnung wie in der Achse</td></tr>
+      <tr><td class="mono">c_factor_mm_per_rev</td><td>mm</td><td>Zahnstangenweg je Lenkradumdrehung</td></tr>
+      <tr><td class="mono">rack_travel_mm</td><td>mm</td><td><em>optional</em> – Zahnstangenhub je Richtung (Anschlag); ohne: so weit die Spurstangen lösbar sind</td></tr>
+      <tr><td class="mono">handwheel_max_deg</td><td>deg</td><td><em>optional</em> – früherer Anschlag am Lenkrad</td></tr>
+      <tr><td class="mono">rack_gain_deg_per_mm</td><td>deg/mm</td><td>nur ohne <code>kinematics</code>: Radlenkwinkel je mm Zahnstange, linear; dann ist <code>rack_travel_mm</code> Pflicht</td></tr>
+      <tr><td class="mono">stiffness_nm_per_deg · efficiency</td><td>Nm/deg · –</td><td><em>optional</em> – wie bei <code>Compliant</code></td></tr>
     </tbody>
   </table></div>
   <div class="code"><span class="lbl">JSON · data/steering/ratio.json</span><pre>{ <span class="s">"type"</span>: <span class="s">"Ratio"</span>,
@@ -240,7 +275,27 @@
     </tbody>
   </table></div>
   <p class="tight">Fehlen <code>components.aero</code> und <code>cwA</code>/<code>clA</code> im <code>vehicle</code>-Block, bricht der Aufbau mit einer Meldung ab – es gibt keine stillen Vorgabewerte.</p>
-  <p class="tight"><strong>Mit <code>balance</code></strong> greifen Abtrieb und Widerstand auf der Fahrbahn an, längs bei <code>x = balance·(l_v+l_h) − l_h</code> vor dem Schwerpunkt. Dann ändern sich die Achslasten genau um <code>balance·F_down</code> vorne und <code>(1−balance)·F_down</code> hinten. <strong>Ohne</strong> greift die Kraft im Schwerpunkt an (Zweispur, MKS: Abtrieb nach statischer Achslastverteilung, Widerstand entlastet vorne; Einspur: 50 % vorne). Ist ein Druckpunkt aus der CFD bekannt (x<sub>CoP</sub> vor der Hinterachse, auf der Fahrbahn), gilt <code>balance = x<sub>CoP</sub>/(l_v+l_h)</code>.</p>
+  <p class="tight"><strong>Mit <code>balance</code></strong> greifen Abtrieb und Widerstand auf der Fahrbahn an, längs bei <code>x = balance·(l_v+l_h) − l_h</code> vor dem Schwerpunkt. Dann ändern sich die Achslasten genau um <code>balance·F_down</code> vorne und <code>(1−balance)·F_down</code> hinten. <strong>Ohne</strong> greift die Kraft im Schwerpunkt an (Zweispur, MKS: Abtrieb nach statischer Achslastverteilung, Widerstand entlastet vorne; Einspur: 50 % vorne). Mit Druckpunkt aus der CFD: Typ <code>Detailed</code>.</p>
+  <h3 class="sub">Mit Druckpunkt und Fahrhöhe – Typ <code>Detailed</code></h3>
+  <div class="code"><span class="lbl">JSON · data/aero/detailedAero.json</span><pre>{ <span class="s">"type"</span>: <span class="s">"Detailed"</span>,
+  <span class="s">"params"</span>: { <span class="s">"cwA"</span>: <span class="n">1.1</span>, <span class="s">"clA"</span>: <span class="n">-3.2</span>, <span class="s">"cop_x_mm"</span>: <span class="n">852</span>, <span class="s">"cop_z_mm"</span>: <span class="n">350</span>,
+              <span class="s">"clA_front_per_mm_front"</span>: <span class="n">0.004</span>, <span class="s">"clA_rear_per_mm_rear"</span>: <span class="n">0.002</span> },
+  <span class="s">"reference"</span>: { <span class="s">"wheelbase"</span>: <span class="n">1.55</span> } }</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Parameter</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">cwA</td><td>m²</td><td>Luftwiderstandsbeiwert × Stirnfläche</td></tr>
+      <tr><td class="mono">rho</td><td>kg/m³</td><td>Luftdichte, Vorgabe 1,2</td></tr>
+      <tr><td class="mono">clA</td><td>m²</td><td>Auftriebsbeiwert × Fläche gesamt (&gt; 0 = Auftrieb), dazu die Verteilung als <strong>eines</strong> von:</td></tr>
+      <tr><td class="mono">&nbsp;&nbsp;balance</td><td>–</td><td>Anteil vorne (0..1)</td></tr>
+      <tr><td class="mono">&nbsp;&nbsp;cop_x_mm</td><td>mm</td><td>Druckpunkt hinter der Vorderachse; Anteil vorne = 1 − cop_x / Radstand</td></tr>
+      <tr><td class="mono">clA_front · clA_rear</td><td>m²</td><td>statt <code>clA</code>: Beiwerte je Achse, wie Windkanal oder CFD sie an den Achsen ausgeben</td></tr>
+      <tr><td class="mono">cop_z_mm</td><td>mm</td><td>Höhe des Druckpunkts über der Fahrbahn, dort wirkt der Widerstand und entlastet vorne um <code>F_drag · cop_z / Radstand</code>. Vorgabe 0: die Verteilung enthält das Nickmoment schon (Achswerte aus dem Windkanal)</td></tr>
+      <tr><td class="mono">clA_front_per_mm_front · clA_front_per_mm_rear · clA_rear_per_mm_front · clA_rear_per_mm_rear</td><td>m²/mm</td><td>optional, Vorgabe 0. Änderung von clA einer Achse je mm Fahrhöhe vorne bzw. hinten (+ = höher) – die Ableitungen einer Aero-Map um die Konstruktionslage. So wandert die Balance beim Anbremsen und Beschleunigen</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Der Radstand kommt aus der Fahrzeugdatei, <code>reference.wheelbase</code> [m] gilt nur für den Einzel-Report. Die Fahrhöhe je Achse liefern MKS und Zweispurmodell aus der Lage des Aufbaus;
+  Einspurmodell und g-g-v-Hülle rechnen in Konstruktionslage. Unbekannte Schlüssel und doppelte Vorgaben sind ein Fehler. Der Report zeigt Achslasten, Druckpunkt, Abtrieb/Widerstand und – mit Fahrhöhenabhängigkeit – cl·A und Balance über der Fahrhöhe.</p>
   <p class="tight">In den Kanälen: <code>F_drag</code>, <code>F_down</code>, <code>F_down_f</code>.</p>
   <div class="code"><span class="lbl">Report</span><pre>drivelab inspect aero data/aero/simpleAero.json --open</pre></div>
 </section>
@@ -255,6 +310,27 @@
     </tbody>
   </table></div>
   <div class="note"><span class="t">Radbezogen</span> Alle Raten und Dämpfungen gelten am Rad. <code>motion_ratio</code> rechnet nur für die Diagnose auf das Bauteil um: Federweg = MR · Radweg, Federrate = wheel_rate / MR².</div>
+  <h3 class="sub">Aus Zielwerten: "Parametric"</h3>
+  <p>Hub und Wanken entkoppelt, angegeben über Zielwerte. Gefederte Eckmasse (halbe statische Achslast minus <code>m_R</code>), Reifenrate <code>c_R</code> und Spurweite kommen aus der
+  Fahrzeugdatei; <code>"reference": {"corner_mass", "tire_rate", "track"}</code> gilt nur für den Einzel-Report. Alle Kennwerte optional außer je einer Angabe für Hub und Wanken;
+  unbekannte Schlüssel sind ein Fehler. Beispiel: <span class="file">data/sds/soll_sds_va.json</span>.</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Schlüssel in params</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">travel_bump_mm · travel_rebound_mm</td><td>mm</td><td>Radweg bis Hubende (Vorgabe je 30); Wanken bis zum kleineren der beiden</td></tr>
+      <tr><td class="mono">heave_frequency_hz <em>oder</em> heave_wheel_rate_n_per_mm</td><td>Hz · N/mm</td><td>Hub-Eigenfrequenz der Ecke (Reifen in Reihe) oder Hubrate am Rad</td></tr>
+      <tr><td class="mono">heave_rate_bump_n_per_mm · heave_rate_rebound_n_per_mm</td><td>N/mm</td><td><em>optional</em> – Rate am Hubende (Progression), dazwischen linear, danach konstant</td></tr>
+      <tr><td class="mono">heave_preload_n</td><td>N</td><td><em>optional</em> – Abstützung je Rad; Vorgabe: gefederte Eckmasse · g (Fahrzeug steht in Konstruktionslage)</td></tr>
+      <tr><td class="mono">heave_damping_ratio_bump/_rebound <em>oder</em> heave_damping_bump/rebound_ns_per_m</td><td>– · Ns/m</td><td>Dämpfungsmaß der Ecke oder Dämpfung am Rad, je Stufe</td></tr>
+      <tr><td class="mono">heave_motion_ratio (· _bump · _rebound)</td><td>–</td><td>Elementweg je mm Hub, optional am Hubende; bestimmt nur den Elementhub (Bauraum)</td></tr>
+      <tr><td class="mono">bumpstop_travel_mm · bumpstop_rate_n_per_mm</td><td>mm · N/mm</td><td><em>optional</em> – Anschlag beim Einfedern am Rad</td></tr>
+      <tr><td class="mono">roll_stiffness_nm_per_deg <em>oder</em> roll_wheel_rate_n_per_mm</td><td>Nm/deg · N/mm</td><td>Wanksteifigkeit der Achse (ohne Reifen) oder Wankrate am Rad</td></tr>
+      <tr><td class="mono">roll_rate_end_n_per_mm</td><td>N/mm</td><td><em>optional</em> – Wankrate am Wegende, beide Richtungen</td></tr>
+      <tr><td class="mono">roll_motion_ratio (· _end) · roll_damping_bump/rebound_ns_per_m</td><td>– · Ns/m</td><td>Elementweg je mm Wanken; Wankdämpfung am Rad (Vorgabe 0)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Als <code>targets.sds.front/rear</code> eingetragen, vergleicht der Fahrzeug-Report sie mit der eingebauten Federung – bei Wippen <strong>links und rechts getrennt</strong>
+  (Raten, Wankrate am Wegende mit linkem bzw. rechtem Rad eingefedert, Übersetzung, Elementhub), dazu die Entkopplung und ein Hinweis, wenn die Abstützung nicht zur Eckmasse passt.</p>
   <h3 class="sub">Aus der Wippengeometrie: "DecoupledRocker"</h3>
   <p>Statt Radraten gibst du die Punkte der beiden Wippen und Feder/Dämpfer <strong>am Element</strong> an. Übersetzung, Progression und
   Kopplung zwischen Heave und Roll folgen aus der Geometrie. Der Pushrod-Fuß folgt der Bahn des Kugelgelenks, an dem er sitzt
@@ -304,22 +380,34 @@ drivelab inspect sds data/sds/rocker_va.json --open</pre></div>
   über Hardpoints (<code>"type": "DoubleWishbone"</code>). Beide lassen sich in der Fahrzeugdatei gegeneinander tauschen – so zeigt derselbe Lauf,
   was die Zielwerte bringen und was die reale Achse davon trifft.</p>
   <h3 class="sub">Soll: Kennwerte</h3>
+  <p class="tight">Alle Kennwerte sind optional; was fehlt, nimmt den Vorgabewert (linear, kein Anschlag, Anti 0). Unbekannte Schlüssel werden als Fehler gemeldet – meist sind es Tippfehler.
+  Positiv: Einfedern, Vorspur, Radoberkante außen.</p>
   <div class="tbl-wrap"><table>
     <thead><tr><th>Schlüssel in params</th><th>Einheit</th><th>Bedeutung</th></tr></thead>
     <tbody>
-      <tr><td class="mono">camber_static_deg · camber_gain_deg_per_mm</td><td>deg · deg/mm</td><td>Sturz bei Hub 0 und Änderung je mm Einfedern; positiv = Radoberkante außen</td></tr>
+      <tr><td class="mono">travel_bump_mm · travel_rebound_mm</td><td>mm</td><td>Radhub bis Hubende ein- und ausfedern (Vorgabe je 30). Dort gelten die Endwerte, dort misst der Soll-Ist-Vergleich</td></tr>
+      <tr><td class="mono">camber_static_deg · camber_gain_deg_per_mm</td><td>deg · deg/mm</td><td>Sturz bei Hub 0 und Änderung je mm Einfedern um die Konstruktionslage</td></tr>
+      <tr><td class="mono">camber_bump_deg · camber_rebound_deg</td><td>deg</td><td><em>optional</em> – Sturz am Hubende. Mit Endwert verläuft die Kurve je Seite quadratisch (progressiv/degressiv) mit dem Gradienten in der Mitte, jenseits des Hubendes linear weiter; ohne Endwert linear</td></tr>
       <tr><td class="mono">toe_static_deg · bump_steer_deg_per_mm</td><td>deg · deg/mm</td><td>Vorspur je Rad und ihre Änderung je mm Einfedern (Wanklenken)</td></tr>
-      <tr><td class="mono">ackermann_pct</td><td>%</td><td>100 = ideal (Kurvenmitte auf Hinterachsverlängerung), 0 = parallel, negativ = Anti-Ackermann. Nur Vorderachse</td></tr>
+      <tr><td class="mono">toe_bump_deg · toe_rebound_deg</td><td>deg</td><td><em>optional</em> – Vorspur am Hubende, wie beim Sturz</td></tr>
       <tr><td class="mono">track_change_mm_per_mm</td><td>mm/mm</td><td>Spurweitenänderung je Rad je mm Einfedern, positiv = nach außen</td></tr>
+      <tr><td class="mono">track_change_bump_mm · track_change_rebound_mm</td><td>mm</td><td><em>optional</em> – Spurweitenänderung je Rad am Hubende</td></tr>
       <tr><td class="mono">roll_center_height_mm · roll_center_migration_mm_per_mm</td><td>mm · mm/mm</td><td>Wankzentrum über Fahrbahn bei Hub 0 und seine Änderung beim Einfedern beider Räder (typisch −1 … −2)</td></tr>
-      <tr><td class="mono">anti_pct</td><td>%</td><td>Anti-Dive/-Lift (vorn) bzw. Anti-Squat/-Lift (hinten) für Radnabenmotoren und außenliegende Bremsen. 100 % = Linie Aufstandspunkt → Seitenansichtspol mit Neigung h<sub>SP</sub> / Radstand</td></tr>
+      <tr><td class="mono">anti_pct</td><td>%</td><td>Anti-Dive/-Lift (vorn) bzw. Anti-Squat/-Lift (hinten). 100 % = Linie zum Seitenansichtspol mit Neigung h<sub>SP</sub> / Radstand</td></tr>
+      <tr><td class="mono">anti_brake_pct · anti_drive_pct</td><td>%</td><td><em>optional</em> – getrennt für Brems- und Antriebskraft, z. B. bei innenliegender Bremse oder Gelenkwellen-Antrieb; Vorgabe <code>anti_pct</code></td></tr>
       <tr><td class="mono">caster_deg · kpi_deg</td><td>deg</td><td>Nachlauf und Spreizung der Lenkachse; bestimmen die Sturzänderung beim Lenken (kurvenäußeres Rad negativer)</td></tr>
       <tr><td class="mono">caster_trail_mm · scrub_radius_mm</td><td>mm</td><td>Nachlaufstrecke (&gt; 0 = Aufstandspunkt hinter der Lenkachse) und Lenkrollradius (&gt; 0 = Aufstandspunkt außen) am Boden; Vorgabe 0. Wirken auf das Lenkachsmoment</td></tr>
+      <tr><td class="mono">ackermann_pct</td><td>%</td><td>um die Mittellage: 100 = ideal (Kurvenmitte auf Hinterachsverlängerung), 0 = parallel, negativ = Anti-Ackermann. Nur Vorderachse</td></tr>
+      <tr><td class="mono">ackermann_lock_pct</td><td>%</td><td><em>optional</em> – Ackermann am Anschlag, dazwischen linear über dem Lenkwinkel; braucht <code>steer_lock_deg</code></td></tr>
+      <tr><td class="mono">steer_lock_deg</td><td>deg</td><td><em>optional</em> – größter Referenzlenkwinkel (Mittel beider Räder); größere Lenkeingänge werden begrenzt. 0 = ohne Anschlag</td></tr>
     </tbody>
   </table></div>
+  <p class="tight"><strong>Abgeleitet</strong> (nicht einstellbar, weil sie aus den Kennwerten folgen; der Report zeigt sie für Soll und Ist): Sturz beim Wanken und Sturzkompensation,
+  Rolllenken, Störkrafthebelarm an der Radmitte (aus Spreizung, Lenkrollradius und Reifenradius), Sturzänderung beim Lenken, Radlenkwinkel innen/außen am Anschlag und Wendekreis.</p>
   <p class="tight"><strong>Kraftübertragung:</strong> Wankzentrum und Anti-Geometrie wirken im MKS. Jede Radecke überträgt zusätzlich zur Feder
   die Vertikalkraft <code>F_jack = Fy · s<sub>y</sub> + Fx · s<sub>x</sub></code> in den Aufbau, s = Neigung der Linie Aufstandspunkt → Momentanpol.
-  Bei Hardpoints kommt s aus der Bahn des Aufstandspunkts beim Einfedern, bei Kennwerten aus Wankzentrum und <code>anti_pct</code>.
+  Bei Hardpoints kommt s aus der Bahn des Aufstandspunkts beim Einfedern, bei Kennwerten aus Wankzentrum und Anti-Werten.
+  Längs gilt bei Fx &gt; 0 die Antriebs-, bei Fx &lt; 0 die Brems-Geometrie (Rekuperation zählt als Bremse).
   Wankzentrum auf Schwerpunkthöhe: das Fahrzeug wankt nur noch über die Reifeneinfederung.</p>
   <p class="tight">Radstand und Spurweite für den Ackermann kommen aus der Fahrzeugdatei. Der Lenkeingang <code>steer</code> ist der mittlere Radlenkwinkel vorne;
   wie er sich auf innen und außen verteilt, bestimmt die Achse. Beispiele: <span class="file">data/kinematics/soll_VA.json</span>, <span class="file">soll_HA.json</span>.
@@ -336,12 +424,19 @@ drivelab inspect sds data/sds/rocker_va.json --open</pre></div>
       <tr><td class="mono">hardpoints.wheel_center</td><td>Radmittelpunkt</td></tr>
       <tr><td class="mono">spin_axis · rack_axis</td><td>Raddrehachse · Bewegungsrichtung der Zahnstange</td></tr>
       <tr><td class="mono">tire_radius</td><td>Reifenradius [m], bestimmt den Aufstandspunkt</td></tr>
+      <tr><td class="mono">brake_mount · drive_mount</td><td><em>optional</em> – <code>"outboard"</code> (Vorgabe: Bremse am Radträger, Radnabenmotor) oder <code>"inboard"</code> (Moment stützt sich am Aufbau ab, Gelenkwelle). Innenliegend beginnt die Anti-Linie an der Radmitte statt am Aufstandspunkt</td></tr>
     </tbody>
   </table></div>
   <div class="code"><span class="lbl">Report</span><pre>drivelab inspect kinematics data/kinematics/front.json --open</pre></div>
   <p class="tight">Zeigt Sturz, Spur, Nachlauf und Spurweitenänderung über dem Federweg, dazu Kennwerte wie Sturzänderung, Bump Steer und Lenkrollradius.
   Für beide Typen außerdem Radlenkwinkel links/rechts und Ackermann-Anteil über dem Lenkwinkel sowie die Wankzentrumshöhe über dem Hub –
-  ohne Fahrzeug bezogen auf 1,55 m Radstand.</p>
+  ohne Fahrzeug bezogen auf 1,55 m Radstand. Die Tabelle „Characteristics“ listet alle Kennwerte, gemessen wie im Soll-Ist-Vergleich.</p>
+  <h3 class="sub">Soll gegen Ist</h3>
+  <p class="tight">In der Fahrzeugdatei stellt <code>"targets": { "kinematics": { "front": "../kinematics/soll_VA.json", "rear": "../kinematics/soll_HA.json" } }</code>
+  die Kennwerte den eingebauten Achsen aus <code>components.kinematics</code> gegenüber – je Achse eine Tabelle mit Soll, Ist und Abweichung, gemessen an den Hubenden der Soll-Datei.
+  Radstand, Spurweite, Schwerpunkthöhe und Reifenradius kommen aus der Fahrzeugdatei. Spalte <em>Status</em>: <code>target</code> = in der Soll-Datei gesetzt,
+  <code>derived</code> = abgeleitet, <code>not set</code> = offen gelassen (keine Abweichung). Beispiel: <span class="file">data/vehicle/MKS.json</span>.</p>
+  <div class="code"><span class="lbl">Report</span><pre>drivelab inspect vehicle data/vehicle/MKS.json --open</pre></div>
 </section>
 
 <section class="chap" id="setup">

@@ -12,7 +12,7 @@
 <main class="main"><div class="page">
 
 <header class="page-head">
-  <span class="k">Anwender · 6</span>
+  <span class="k">Anwender · 7</span>
   <h1>Ergebnisse & Reports</h1>
   <p class="lede">Jeder Lauf bekommt einen eigenen Ordner mit Text-Tabellen. Der Report fasst sie als HTML-Seite zusammen.</p>
 </header>
@@ -31,7 +31,8 @@
 ├── track.csv       <i>Streckengeometrie, alle 0,5 m</i>
 ├── can.tsv         <i>Bus-Mitschnitt – nur mit Steuergeräte-Netz; je Bus can_&lt;Bus&gt;.tsv</i>
 ├── ecu_faults.tsv  <i>Fehlerspeicher – nur wenn es Einträge gibt</i>
-└── report.html     <i>nach drivelab report --html</i></div>
+├── report.html     <i>nach drivelab report --html</i>
+└── replay.html     <i>nach drivelab replay</i></div>
   <p>Die <code>.tsv</code>-Dateien sind tabulatorgetrennt mit Kopfzeile; <span class="file">track.csv</span> ist kommagetrennt.
   Alle lassen sich direkt in Excel, pandas oder MATLAB lesen.</p>
   <div class="tbl-wrap"><table>
@@ -112,6 +113,32 @@ drivelab report results\run_003 --open     <span class="c">rem ein bestimmter La
   Botschaften und ihre Takte, Signalverläufe und den Fehlerspeicher. Läufe vor 0.2.1 haben keine <span class="file">channels.tsv</span>; ihr Report zeigt nur diesen Teil.</p>
 </section>
 
+<section class="chap" id="replay">
+  <div class="chap-head"><h2>Replay: Fahrwerk in 3D</h2></div>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>drivelab replay MeinProjekt --open                      <span class="c">rem neuester Lauf</span>
+drivelab replay results\run_003 --open                  <span class="c">rem ein bestimmter Lauf</span>
+drivelab replay data\vehicle\cure_detail.json --open    <span class="c">rem ohne Lauf: Hub, Wanken, Nicken, Lenken</span></pre></div>
+  <p>Eine einzelne HTML-Datei, die das Fahrwerk Bild für Bild abspielt: Querlenker, Spurstangen, Radträger, Zahnstange, Pushrods, Wippen mit Heave- und Roll-Element
+  und die Räder, dazu die Lage des Aufbaus. Mit einem Lauf kommen Radwege, Lenkwinkel, Wank- und Nickwinkel aus <span class="file">channels.tsv</span>, die Geometrie
+  aus der Fahrzeugdatei in <span class="file">manifest.json</span>; die Datei landet als <span class="file">replay.html</span> im Laufordner. Mit einer Fahrzeugdatei statt eines Laufs
+  fährt die Ansicht nacheinander Hub, Wanken, Nicken und Lenken bis kurz vor den Anschlag – zum Prüfen der Kinematik ohne Simulation (Ausgabe unter
+  <span class="file">results\replay\</span>).</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Bereich</th><th>Inhalt</th></tr></thead>
+    <tbody>
+      <tr><td>3D-Ansicht</td><td>ziehen = drehen, Shift+ziehen = verschieben, Mausrad = zoomen; feste Ansichten 3D, Front, Side, Top, Vorder- und Hinterachse; Reifen massiv, durchsichtig oder nur als Umriss</td></tr>
+      <tr><td>Anzeige oben links</td><td>Zeit, Geschwindigkeit, ax/ay, Radlenkwinkel, Wank- und Nickwinkel; im Bewegungsablauf die Phase</td></tr>
+      <tr><td>Wheels</td><td>je Rad Einfederweg (Balken), Radlast und Sturz</td></tr>
+      <tr><td>Spring / damper</td><td>je Achse Weg und Kraft von Heave- und Roll-Element – für jede Federung aus <span class="fn">force()</span>, bei der Wippe am Element</td></tr>
+      <tr><td>Streifen unten</td><td>Radwege über der Zeit; klicken oder ziehen springt an die Stelle</td></tr>
+      <tr><td>Karte</td><td>nur mit Lauf: Fahrweg mit aktueller Lage</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Optionen: <code>--fps &lt;n&gt;</code> Bilder je Sekunde (Vorgabe 30, lange Läufe werden auf höchstens 9000 Bilder verdünnt), <code>--output &lt;datei&gt;</code>.
+  Ohne Hardpoints (Kinematik <code>Parametric</code>, Zweispur- und Einspurmodell) zeigt die Ansicht vereinfachte Räder mit Federbein, Sturz und Lenkwinkel aus den Kanälen.
+  Geometrie außerhalb von ±80 mm Radweg wird am Rand gehalten; der Reifen wird als starr gezeichnet, die Räder stehen im Mittel auf der Fahrbahn.</p>
+</section>
+
 <section class="chap" id="assess">
   <div class="chap-head"><h2>Fahrzeugbewertung</h2></div>
   <p><code>inspect vehicle</code> zeigt, was im Fahrzeug steckt. <code>assess</code> zeigt, wie es fährt: Standardmanöver auf einer ebenen, unbegrenzten Fläche,
@@ -145,6 +172,38 @@ drivelab report results\run_003 --open     <span class="c">rem ein bestimmter La
 └── steer_ramp/ …         <i>je Manöver ein Laufordner mit channels.tsv</i></div>
   <p class="tight">Die Kennwerte sind nur so gut wie das Modell: Einspur- und Zweispurmodell haben keine Achskinematik, das Einspurmodell rollt nicht.
   Konstanter Lenkwinkel und Lenkwinkelrampe liefern leicht verschiedene Eigenlenkgradienten, weil beim Beschleunigen Längskräfte mitwirken.</p>
+</section>
+
+<section class="chap" id="ggv">
+  <div class="chap-head"><h2>g-g-v-Hülle (experimentell)</h2></div>
+  <p>Die g-g-v-Hülle zeigt, welche Längs- und Querbeschleunigung das Fahrzeug bei jeder Geschwindigkeit höchstens schafft – mit perfektem Fahrer, aus den
+  Komponentendaten gerechnet, ohne Zeitsimulation. Sie ist die Grundlage für Rundenzeit- und Geschwindigkeitsprofile.</p>
+  <div class="code"><span class="lbl">Eingabeaufforderung</span><pre>drivelab inspect ggv data\vehicle\MeinFahrzeug.json --open
+drivelab inspect ggv data\vehicle\MeinFahrzeug.json --run results\run_001 --run assessments\assess_001\steer_ramp --open</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Teil</th><th>Inhalt</th></tr></thead>
+    <tbody>
+      <tr><td>Kennwerte</td><td>größte Beschleunigung, Verzögerung, Querbeschleunigung bei konstanter Geschwindigkeit; Accel-Zeit (0,3 → 75,3 m) und Skidpad-Runde (Radius 9,125 m) der Hülle; Wanksteifigkeits- und Bremsmomentanteil vorne</td></tr>
+      <tr><td>3D-Ansicht</td><td>die ganze Hülle als Fläche über Querbeschleunigung, Längsbeschleunigung und Geschwindigkeit, mit der Maus drehbar; eingefärbt nach dem, was begrenzt, oder nach der Längsbeschleunigung; feste Ansichten g-g von oben, quer und längs über der Geschwindigkeit; Werte beim Zeigen auf die Fläche; Läufe als Linie</td></tr>
+      <tr><td>g-g-Diagramm</td><td>die Hülle bei bis zu sechs Geschwindigkeiten; Läufe aus <code>--run</code> als Linie darin</td></tr>
+      <tr><td>Grenzen über der Geschwindigkeit</td><td>Beschleunigung, Verzögerung, Querbeschleunigung (höchste und bei konstanter Geschwindigkeit); Läufe als Längs- und Querbeschleunigung über der Geschwindigkeit</td></tr>
+      <tr><td>Tabellen</td><td>je Geschwindigkeit die Werte und <strong>was begrenzt</strong>: Reifen vorne oder hinten, Motoren, Akku, Bremse; dasselbe über die Hülle verteilt</td></tr>
+      <tr><td>CSV</td><td><span class="file">ggv_grid.csv</span> mit dem ganzen Raster (Geschwindigkeit, ay, ax max/min, Begrenzung), dazu je Diagramm und Tabelle eine CSV</td></tr>
+    </tbody>
+  </table></div>
+  <h3 class="sub">So ist gerechnet</h3>
+  <ul class="list">
+    <li>Je Geschwindigkeit (10-km/h-Schritte bis zur Höchstgeschwindigkeit) und Querbeschleunigung sucht DriveLab die größte Längsbeschleunigung beim Antreiben und Bremsen, bei der jede Grenze hält.</li>
+    <li><strong>Radlasten:</strong> statisch, Abtrieb mit Aero-Balance, Längsverlagerung über die Schwerpunkthöhe, Querverlagerung über die Wankzentren (MKS: aus der Kinematik) und die Wanksteifigkeit (MKS: aus der Federung, Zweispur: <code>c_A_v</code>/<code>c_A_h</code>).</li>
+    <li><strong>Reifen:</strong> Kraftmaximum aus der Reifendatei bei der jeweiligen Radlast, Sturz in Konstruktionslage, Längs und Quer über eine Reibungsellipse verbunden.</li>
+    <li><strong>Seitenkraft je Achse</strong> aus dem Momentengleichgewicht um die Hochachse. Links und rechts nutzt jedes Rad seine eigene Haftung (ideale Verteilung, beim Antreiben z. B. per Torque Vectoring); das Giermoment daraus ist vernachlässigt. Vorne/hinten: Antreiben nutzt jede Achse bis zu ihrer Grenze, Bremsen folgt der festen Bremsbalance.</li>
+    <li><strong>Antrieb:</strong> Motorkennlinie bei der Drehzahl, mit Akku dessen Leistungsgrenze. <strong>Bremse:</strong> Bremskraftverteilung der Bremsdatei bei vollem Pedal, ohne Rekuperation.</li>
+    <li>Drehmassen (Räder, Rotor × Übersetzung²) zählen dort, wo Motor- oder Bremsmoment begrenzt. Kein Rollwiderstand.</li>
+  </ul>
+  <p class="tight">Experimentell heißt: Die Hülle ist eine Idealisierung und liegt über dem, was die Zeitsimulation oder ein Fahrer erreicht.
+  Wie weit, zeigt der Vergleich mit <code>--run</code>: Durchdrehen ohne Traktionskontrolle, Übergänge, ungleiche Schräglaufwinkel links und rechts.
+  Die Kreisfahrten aus <code>assess</code> brechen ab, sobald die Querbeschleunigung kaum noch steigt – ihr Höchstwert liegt deshalb meist etwas unter dem Grenzbereich des Modells.
+  Einspurmodelle haben keine Querverlagerung und werden nicht unterstützt.</p>
 </section>
 
 <section class="chap" id="komponenten">

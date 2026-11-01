@@ -378,3 +378,8 @@ body[data-track="dev"]{--track:var(--dev);--track-soft:var(--dev-soft);--track-w
 .stale{border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--warn-soft);border-radius:8px;padding:10px 14px;margin:18px 0 0;font-size:13.5px}
 @media (max-width:640px){.pager{grid-template-columns:1fr}.pager a.next{grid-column:1}}
 @media print{.side,.pager,.copy{display:none}.shell{display:block}.page{max-width:none;padding:0}}
+
+/* Ausgabe: data-edition="web" nur auf der GitHub-Seite, data-edition="local" nur im Quellbaum/in der Installation */
+[data-edition="web"]{display:none}
+.edition-web [data-edition="web"]{display:block}
+.edition-web [data-edition="local"]{display:none}

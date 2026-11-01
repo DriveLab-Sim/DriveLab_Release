@@ -12,7 +12,7 @@
 <main class="main"><div class="page">
 
 <header class="page-head">
-  <span class="k">Anwender · 5</span>
+  <span class="k">Anwender · 6</span>
   <h1>Kommandozeile</h1>
   <p class="lede">Ein Programm, <code>drivelab</code>, mit wenigen Befehlen. <code>drivelab help</code> zeigt dieselbe Übersicht im Terminal.</p>
 </header>
@@ -26,6 +26,8 @@
       <tr><td class="mono">run &lt;projekt&gt;</td><td>Rechnet einen Lauf, schreibt <code>results\run_NNN</code>.</td></tr>
       <tr><td class="mono">report &lt;projekt|lauf&gt;</td><td>Zusammenfassung im Terminal; mit dem Projekt ist der neueste Lauf gemeint.</td></tr>
       <tr><td class="mono">&nbsp;&nbsp;--html · --open</td><td>HTML-Report schreiben bzw. schreiben und im Browser öffnen</td></tr>
+      <tr><td class="mono">replay &lt;projekt|lauf|fahrzeug.json&gt;</td><td>Fahrwerk und Federung in 3D: einen Lauf abspielen (<span class="file">replay.html</span> im Laufordner) oder mit einer Fahrzeugdatei Hub, Wanken, Nicken und Lenken. <a href="ergebnisse.html#replay">→ Replay</a></td></tr>
+      <tr><td class="mono">&nbsp;&nbsp;--open · --fps &lt;n&gt; · --output &lt;datei&gt;</td><td>im Browser öffnen, Bilder je Sekunde (Vorgabe 30), andere Zieldatei</td></tr>
       <tr><td class="mono">assess &lt;projekt&gt;</td><td>Fährt Standardmanöver auf dem virtuellen Prüfgelände und schreibt einen mehrseitigen Report nach <code>assessments\assess_NNN</code>. <a href="ergebnisse.html#assess">→ Fahrzeugbewertung</a></td></tr>
       <tr><td class="mono">&nbsp;&nbsp;--open</td><td>Report im Browser öffnen</td></tr>
     </tbody>
@@ -35,19 +37,21 @@
 
 <section class="chap" id="inspect">
   <div class="chap-head"><h2>Komponenten prüfen</h2></div>
-  <div class="code"><span class="lbl">Aufbau</span><pre>drivelab inspect &lt;typ&gt; &lt;datei&gt; [--output &lt;ordner&gt;] [--open]</pre></div>
+  <div class="code"><span class="lbl">Aufbau</span><pre>drivelab inspect &lt;typ&gt; &lt;datei&gt; [--output &lt;ordner&gt;] [--open]
+drivelab inspect ggv &lt;fahrzeug&gt; [--run &lt;lauf&gt;]... [--output &lt;ordner&gt;] [--open]</pre></div>
   <div class="tbl-wrap"><table>
     <thead><tr><th>typ</th><th>Datei</th><th>Report zeigt</th></tr></thead>
     <tbody>
       <tr><td class="mono">tire</td><td>Reifen</td><td>Seiten-, Längskraft, Rückstellmoment, kombinierter Schlupf</td></tr>
       <tr><td class="mono">motor</td><td>Antrieb</td><td>Moment- und Leistungskennlinie</td></tr>
       <tr><td class="mono">battery</td><td>HV-Akku</td><td>Kennwerte des Packs, Spannung und Leistungsgrenzen über dem Ladezustand</td></tr>
-      <tr><td class="mono">steering</td><td>Lenkung</td><td>Radlenkwinkel und Übersetzung über dem Lenkradwinkel</td></tr>
-      <tr><td class="mono">brake</td><td>Bremse</td><td>Radmomente über dem Pedal, Verteilung</td></tr>
-      <tr><td class="mono">aero</td><td>Aerodynamik</td><td>Widerstand und Auftrieb über der Geschwindigkeit</td></tr>
-      <tr><td class="mono">sds</td><td>Federung</td><td>Feder- und Dämpferkennlinien</td></tr>
-      <tr><td class="mono">kinematics</td><td>Kinematik</td><td>Sturz, Spur, Nachlauf über dem Federweg</td></tr>
-      <tr><td class="mono">vehicle</td><td>Fahrzeug</td><td>alle Komponenten des Fahrzeugs und das Steuergeräte-Netz in einem Report</td></tr>
+      <tr><td class="mono">steering</td><td>Lenkung</td><td>Radlenkwinkel und Übersetzung über dem Lenkradwinkel, Kennwerte (Übersetzung, Anschläge, Nachgiebigkeit)</td></tr>
+      <tr><td class="mono">brake</td><td>Bremse</td><td>Radmomente über dem Pedal, Verteilung, Kennwerte</td></tr>
+      <tr><td class="mono">aero</td><td>Aerodynamik</td><td>Widerstand und Auftrieb über der Geschwindigkeit, Achslasten und Druckpunkt, bei <code>Detailed</code> cl·A und Balance über der Fahrhöhe</td></tr>
+      <tr><td class="mono">sds</td><td>Federung</td><td>Feder- und Dämpferkennlinien, Kennwerte (Hub- und Wankrate links/rechts, Übersetzungen, Kopplung)</td></tr>
+      <tr><td class="mono">kinematics</td><td>Kinematik</td><td>Sturz, Spur, Nachlauf über dem Federweg, Kennwerte</td></tr>
+      <tr><td class="mono">vehicle</td><td>Fahrzeug</td><td>alle Komponenten des Fahrzeugs und das Steuergeräte-Netz in einem Report; mit <code>targets</code> der Soll-Ist-Vergleich, <a href="konzept.html">→ Konzept &amp; Soll-Ist</a></td></tr>
+      <tr><td class="mono">ggv</td><td>Fahrzeug (Zweispur, MKS)</td><td>experimentell: g-g-v-Hülle, was sie begrenzt, Accel- und Skidpad-Zeit der Hülle; mit <code>--run</code> Läufe zum Vergleich, <a href="ergebnisse.html#ggv">→ g-g-v-Hülle</a></td></tr>
     </tbody>
   </table></div>
   <p class="tight">Ohne <code>--output</code> landet der Report in <code>results\inspect\&lt;typ&gt;\&lt;datei&gt;</code> unter dem aktuellen Ordner.</p>
@@ -73,7 +77,7 @@
   <div class="tbl-wrap"><table>
     <thead><tr><th>Befehl</th><th>Wirkung</th></tr></thead>
     <tbody>
-      <tr><td class="mono">docs [thema]</td><td>dieses Handbuch im Browser öffnen, z. B. <code>drivelab docs ecu</code>. Themen: <code>start, erste-schritte, projekt, fahrzeug, umgebung, cli, ergebnisse, steuergeraete, python, hilfe</code> und Kurzformen wie <code>ecu</code>, <code>reifen</code>, <code>report</code></td></tr>
+      <tr><td class="mono">docs [thema]</td><td>dieses Handbuch im Browser öffnen, z. B. <code>drivelab docs ecu</code>. Themen: <code>start, erste-schritte, projekt, fahrzeug, konzept, umgebung, cli, ergebnisse, steuergeraete, python, hilfe</code> und Kurzformen wie <code>ecu</code>, <code>reifen</code>, <code>report</code></td></tr>
       <tr><td class="mono">version</td><td>Version, Installationsordner, Arbeitsordner</td></tr>
       <tr><td class="mono">license</td><td>Lizenzstatus und gelesene Datei</td></tr>
       <tr><td class="mono">help</td><td>Befehlsübersicht</td></tr>
