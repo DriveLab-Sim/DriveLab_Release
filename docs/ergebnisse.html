@@ -25,7 +25,8 @@
 ├── outputs.tsv     <i>zusätzliche Ausgänge des Modells (Momente, Motordrehzahlen, …)</i>
 ├── <b>channels.tsv</b>    <i>Standardkanäle mit festen Namen, gleich für alle Modelle</i>
 ├── channels.json   <i>Einheiten und Radpositionen zu channels.tsv</i>
-├── <b>summary.json</b>    <i>Kennwerte und kritische Zustände – nach drivelab run</i>
+├── <b>summary.json</b>    <i>Kennwerte, kritische Zustände und Runden – nach drivelab run</i>
+├── laps.tsv        <i>Rundenzeiten – nach drivelab run, wenn eine Runde fertig wurde</i>
 ├── road.tsv        <i>Lage zur Straße: s, e_y, e_psi, Randabstände, offRoad</i>
 ├── sensors.tsv     <i>IMU und POV</i>
 ├── track.csv       <i>Streckengeometrie, alle 0,5 m</i>
@@ -41,7 +42,8 @@
       <tr><td class="mono">states.tsv</td><td><code>t</code> und die Zustände des Modells. Die Namen hängen vom Modell ab: Einspur <code>xdot, ydot, …</code>, Zweispur/MKS <code>v_x_body, v_y_body, …</code></td></tr>
       <tr><td class="mono">outputs.tsv</td><td><code>t, M_A_v, M_A_h, omega_motor_v, omega_motor_h</code>; das MKS schreibt zusätzlich Radkräfte, Sturz, Einfederung, Bauteilkräfte</td></tr>
       <tr><td class="mono">channels.tsv</td><td>Standardkanäle, siehe <a href="#kanaele">unten</a>. Fehlt einem Modell eine Größe, fehlt die Spalte; ein leeres Feld heißt „kein Wert“</td></tr>
-      <tr><td class="mono">summary.json</td><td><code>kpis</code> (Wert, Einheit, Bezeichnung) und <code>critical_states</code> (Zustand, Rad, Start, Dauer, Spitzenwert)</td></tr>
+      <tr><td class="mono">summary.json</td><td><code>kpis</code> (Wert, Einheit, Bezeichnung), <code>critical_states</code> (Zustand, Rad, Start, Dauer, Spitzenwert) und <code>laps</code> (wie laps.tsv)</td></tr>
+      <tr><td class="mono">laps.tsv</td><td><code>lap, t_start, t_end, time</code> [s], <code>distance</code> [m], <code>v_mean, v_min, v_max</code> [m/s], <code>standing_start, valid</code> (0/1). Zeitnahme <a href="umgebung.html#zeitnahme">→ Start- und Ziellinie</a></td></tr>
       <tr><td class="mono">road.tsv</td><td class="mono">t, s, e_y, e_psi, distLeft, distRight, offRoad</td></tr>
       <tr><td class="mono">sensors.tsv</td><td class="mono">t, imu_valid, imu_ax … imu_gz, pov_valid, pov_n, pov_center_x, pov_center_y, pov_heading, pov_curvature, pov_width</td></tr>
       <tr><td class="mono">track.csv</td><td class="mono">s, cx, cy, lx, ly, rx, ry</td></tr>
@@ -100,6 +102,7 @@ drivelab report results\run_003 --open     <span class="c">rem ein bestimmter La
     <thead><tr><th>Abschnitt</th><th>Inhalt</th></tr></thead>
     <tbody>
       <tr><td>Run summary</td><td>Kennwerte (max. Geschwindigkeit, Quer-, Brems- und Längsbeschleunigung in g, Reifenausnutzung je Achse, Zeit am Reifenlimit, Energie am Rad) und die Tabelle der kritischen Zustände</td></tr>
+      <tr><td>Lap times</td><td>Rundenkurs: Anzahl Runden, beste und mittlere Runde; offene Strecke: Zeit Start bis Ziel. Tabelle je Runde (Zeit, Abstand zur besten, Start, mittlere/max./min. Geschwindigkeit, stehender Start, ungültig) und Geschwindigkeit über dem Rundenweg, alle Runden übereinander</td></tr>
       <tr><td>Tire utilization</td><td>Ausnutzung <code>√((Fx/Fx,max)² + (Fy/Fy,max)²)</code> je Rad über der Zeit und als Farbe auf der Strecke, Reibkreise je Rad, Tabelle je Rad</td></tr>
       <tr><td>Wheel loads</td><td>Radlasten, Querlastverschiebung je Achse (links − rechts), statischer Vorderachsanteil</td></tr>
       <tr><td>HV battery</td><td>nur mit Akku: Akkuenergie, Wh/km, SoC Start/Ende, minimale Spannung, maximale Leistung; SoC über der Strecke, Leistung mit verfügbarer Leistung, Spannung, Strom. Kritischer Zustand „Battery limited“. Tabelle „Checks“ mit OK/FAIL: Energie- und Ladungsbilanz, Zellspannung, Zellstrom, Leistungsgrenzen, Σ P_el = p_batt; Anzahl Fehler in <code>summary.json</code> als <code>battery_checks_failed</code></td></tr>

@@ -71,12 +71,34 @@
   Findet die Prüfung Lücken in der Spurführung, stehen Warnungen im <span class="file">run.log</span>. In Python zeigt <code>diagnose_route</code> die Stelle.</p>
 </section>
 
+<section class="chap" id="zeitnahme">
+  <div class="chap-head"><h2>Zeitnahme: Start- und Ziellinie</h2></div>
+  <p>Die Rundenzeit wird auf dem Streckenfortschritt <code>s</code> gemessen, nicht an einem Punkt in x/y. <code>s</code> folgt dem befahrenen Ast;
+  fährt das Fahrzeug an einer Kreuzung auf einem anderen Ast durch den Startbereich, zählt das nicht. Gezählt werden nur Überquerungen
+  vorwärts, der Zeitpunkt wird zwischen den Abtastpunkten interpoliert. Optionaler Block <code>timing</code> in der <code>config.json</code>:</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Schlüssel</th><th>Standard</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">start_s</td><td>0</td><td>Startlinie [m]; beim Rundkurs zugleich das Ziel</td></tr>
+      <tr><td class="mono">finish_s</td><td>Streckenende − 0,1 m</td><td>Ziellinie [m], nur auf offenen Strecken (A nach B). Dort endet die Simulation, weiter hinten wird keine Linie mehr erreicht</td></tr>
+    </tbody>
+  </table></div>
+  <div class="code"><span class="lbl">JSON · in config.json</span><pre><span class="s">"timing"</span>: { <span class="s">"start_s"</span>: <span class="n">120.0</span> }</pre></div>
+  <ul class="list">
+    <li><strong>Rundkurs</strong> ist eine geschlossene Einzelstrecke (<code>s</code> läuft periodisch): jede Überquerung der Startlinie beendet eine Runde und beginnt die nächste.
+    Steht das Fahrzeug beim Start auf der Linie, läuft die Uhr ab t = 0 (stehender Start), sonst ab der ersten Überquerung.</li>
+    <li><strong>Route</strong> durch ein Netz gilt als offene Strecke, auch wenn sie zum Start zurückführt: eine Zeit von Start bis Ziel.</li>
+    <li>Springt <code>s</code> (der Beobachter hat die Strecke neu gesucht, weil das Fahrzeug weit daneben war), ist die Runde ungültig.</li>
+  </ul>
+  <p class="tight">Ergebnis: Abschnitt „Lap times“ im Report, <span class="file">laps.tsv</span> und <code>laps</code> in <span class="file">summary.json</span>, <a href="ergebnisse.html#lauf">→ Ergebnisse</a>.</p>
+</section>
+
 <section class="chap" id="fahrer">
   <div class="chap-head"><h2>Fahrer</h2></div>
   <div class="tbl-wrap"><table>
     <thead><tr><th>type</th><th>Verhalten</th><th>params</th></tr></thead>
     <tbody>
-      <tr><td class="mono">"scripted"</td><td>Zeitskript aus Phasen: ab <code>t</code> gelten die Werte, bis die nächste Phase beginnt</td><td class="mono">phases[ {t, gas, bremse, lenkwinkel} ]</td></tr>
+      <tr><td class="mono">"scripted"</td><td>Zeitskript aus Phasen: ab <code>t</code> gelten die Werte, bis die nächste Phase beginnt. Mit <code>rampe</code> [s] wird linear über diese Dauer übergeblendet statt gesprungen</td><td class="mono">phases[ {t, gas, bremse, lenkwinkel, rampe} ]</td></tr>
       <tr><td class="mono">"path"</td><td>Bahnfolgeregler: hält die Mitte (Querabweichung, Kurswinkel, Krümmung vorausschauend) und passt das Tempo den Kurven an</td><td class="mono">k_y · k_psi · wheelbase · v_max · a_lat_max · a_brake_plan · kp_speed · steer_max (Radlenkwinkel; mit Lenksystem rechnet der Regler selbst auf den Lenkradwinkel um, <a href="fahrzeug.html#lenkung">→ Lenkung</a>)</td></tr>
     </tbody>
   </table></div>

@@ -4,7 +4,7 @@
 (function () {
   "use strict";
 
-  var VERSION = "0.2.3";
+  var VERSION = "0.2.4";
 
   // "local": Handbuch im Quellbaum und in der Installation. Doku/make_web_docs.py setzt "web" fuer die GitHub-Seite.
   var EDITION = "web";

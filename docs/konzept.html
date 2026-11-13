@@ -43,13 +43,31 @@
   <div class="tbl-wrap"><table>
     <thead><tr><th>Status</th><th>Bedeutung</th><th>Abweichung</th></tr></thead>
     <tbody>
-      <tr><td class="mono">target</td><td>in der Konzeptdatei gesetzt</td><td>Ist − Soll</td></tr>
-      <tr><td class="mono">derived</td><td>folgt aus anderen Werten (z. B. Sturz beim Wanken, Wendekreis, Rollasymmetrie) – für Soll und Ist berechnet</td><td>Ist − Soll</td></tr>
-      <tr><td class="mono">not set</td><td>offen gelassen; nur der Ist-Wert wird gezeigt</td><td>–</td></tr>
+      <tr><td class="mono">target</td><td>in der Ziel-Datei gesetzt</td><td>Ist − Soll</td></tr>
+      <tr><td class="mono">derived</td><td>folgt aus anderen Werten (z. B. Sturz beim Wanken, Wendekreis, Rollasymmetrie) oder aus der Geometrie der Ziel-Datei – für Soll und Ist berechnet</td><td>Ist − Soll</td></tr>
+      <tr><td class="mono">not set</td><td>der Typ der Ziel-Datei könnte ihn vorgeben, sie lässt ihn offen; nur der Ist-Wert wird gezeigt</td><td>–</td></tr>
     </tbody>
   </table></div>
   <p class="tight">Gemessen wird an den Hubenden der Konzeptdatei (<code>travel_bump_mm</code>, <code>travel_rebound_mm</code>). Jede Komponente zeigt im eigenen Report dieselben
   Kennwerte als Tabelle „Characteristics“ – daraus lässt sich umgekehrt ein Konzept aus einer bestehenden Konstruktion ableiten.</p>
+  <h3 class="sub">Welche Datei als Ziel taugt</h3>
+  <p>Jede Datei der Komponente, nicht nur ein Konzept. Was vorgegeben, offen oder abgeleitet ist, bestimmt ihr Typ: Kennwert-Typen (<code>Parametric</code>,
+  bei der Lenkung <code>Ratio</code>, <code>Compliant</code>, <code>Rack</code>) geben Werte einzeln vor. Typen aus Geometrie oder Physik (<code>DoubleWishbone</code>,
+  <code>DecoupledRocker</code>, <code>DecoupledRollHeave</code>) legen alles fest – dann ist jeder Kennwert <code>derived</code> und wird verglichen.
+  So lässt sich auch ein Konstruktionsstand gegen einen anderen halten, z. B. zwei Hardpoint-Dateien.</p>
+  <div class="code"><span class="lbl">JSON · Konstruktion neu gegen alt</span><pre><span class="s">"components"</span>: { …, <span class="s">"kinematics"</span>: { <span class="s">"front"</span>: <span class="s">"../kinematics/cureVL_neu.json"</span>, … } },
+<span class="s">"targets"</span>:    { <span class="s">"kinematics"</span>: { <span class="s">"front"</span>: <span class="s">"../kinematics/cureVL.json"</span> } }</pre></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Vergleich</th><th><code>components</code></th><th><code>targets</code></th><th>Tabelle</th></tr></thead>
+    <tbody>
+      <tr><td>Konzept gegen Detail</td><td>Hardpoints, Wippe, …</td><td>Konzept</td><td><code>target</code> für die gesetzten Werte, <code>not set</code> für die offenen</td></tr>
+      <tr><td>Konzept gegen Konzept</td><td>Konzept B</td><td>Konzept A</td><td><code>target</code> für die in A gesetzten Werte; was nur B vorgibt, steht als Ist-Wert da</td></tr>
+      <tr><td>Bauteil gegen Bauteil</td><td>z. B. Hardpoints neu</td><td>Hardpoints alt</td><td><code>derived</code>: jeder Kennwert mit Abweichung, Zähler „Values compared“</td></tr>
+    </tbody>
+  </table></div>
+  <p class="tight">Die Bremse vergleicht immer alle Kennwerte. Gemessen wird bei beiden Varianten mit den Größen derselben Fahrzeugdatei (Masse, Radstand, Spur, Reifen)
+  und an den Hubenden der Ziel-Datei (ohne Angabe ±30 mm). Zwei ganze Fahrzeuge gegeneinander gibt es noch nicht – dafür beide Fahrzeug-Reports erzeugen
+  oder die Komponenten einzeln über <code>targets</code> vergleichen.</p>
 </section>
 
 <section class="chap" id="fahrzeugziele">

@@ -51,8 +51,8 @@
       <tr><td class="mono">ecus</td><td>nein</td><td>Steuergeräte-Netz, <a href="steuergeraete.html">→ Steuergeräte</a>. Ohne gehen die Fahrerbefehle direkt ans Fahrzeug.</td></tr>
     </tbody>
   </table></div>
-  <p class="tight"><strong>Zielwerte (optional):</strong> Ein Block <code>"targets"</code> neben <code>components</code> nennt je Komponente eine Datei mit Soll-Werten
-  (<code>"type": "Parametric"</code>). Simuliert wird weiter mit <code>components</code>; der Fahrzeug-Report stellt Soll und Ist in einer Tabelle gegenüber.
+  <p class="tight"><strong>Zielwerte (optional):</strong> Ein Block <code>"targets"</code> neben <code>components</code> nennt je Komponente eine Datei mit Soll-Werten,
+  meist ein Konzept (<code>"type": "Parametric"</code>), aber jeder Typ der Komponente geht, z. B. ein älterer Konstruktionsstand. Simuliert wird weiter mit <code>components</code>; der Fahrzeug-Report stellt Soll und Ist in einer Tabelle gegenüber.
   Heute für <code>brake</code> (<a href="#bremse">→ Bremse</a>), <code>kinematics</code> und <code>sds</code> mit <code>front</code>/<code>rear</code> (<a href="#kinematik">→ Kinematik</a>, <a href="#federung">→ Federung</a>),
   <code>steering</code> (<a href="#lenkung">→ Lenkung</a>) und <code>vehicle</code> für Fahrzeugziele. Ablauf und Beispiel: <a href="konzept.html">→ Konzept &amp; Soll-Ist</a>.</p>
   <div class="code"><span class="lbl">JSON · targets</span><pre><span class="s">"components"</span>: { …, <span class="s">"brake"</span>: <span class="s">"../brake/simpleBrake.json"</span> },
